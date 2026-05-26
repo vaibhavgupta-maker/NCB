@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NCB Consumer Authentication Workflow</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 32px 40px 24px;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: white;
+    }
+
+    header p {
+      max-width: 920px;
+      margin: 8px 0 0;
+      color: #dbeafe;
+      font-size: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 20px;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .scenario-buttons {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    button.scenario-button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 12px 14px;
+      text-align: left;
+      font: inherit;
+      transition: 160ms ease;
+    }
+
+    button.scenario-button:hover {
+      border-color: var(--blue);
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+
+    button.scenario-button.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 4px 0 0 var(--blue);
+    }
+
+    .button-kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+
+    .details {
+      padding: 20px;
+    }
+
+    .details p {
+      margin: 0 0 14px;
+      color: #334155;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: var(--gray-soft);
+    }
+
+    .pill.lookup {
+      background: var(--purple-soft);
+      color: #4c1d95;
+      border-color: #c4b5fd;
+    }
+
+    .pill.auth {
+      background: var(--amber-soft);
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+
+    .pill.stop {
+      background: var(--red-soft);
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    .pill.success {
+      background: var(--green-soft);
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    ul {
+      margin: 8px 0 18px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 7px 0;
+      color: #334155;
+    }
+
+    .rule-card {
+      margin: 16px 20px 20px;
+      padding: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 14px;
+      color: #78350f;
+      font-size: 14px;
+    }
+
+    .diagram-panel {
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .toolbar strong {
+      font-size: 14px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .toolbar button:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .diagram-wrap {
+      padding: 18px;
+      overflow: auto;
+      min-height: 680px;
+      background: white;
+    }
+
+    #diagram {
+      min-width: 980px;
+    }
+
+    #diagram svg {
+      max-width: none;
+      width: 100%;
+      height: auto;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 160ms ease;
+      pointer-events: none;
+      font-size: 14px;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1050px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+
+    .client-brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .client-brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .client-brand-logo {
+      display: block;
+      max-height: 54px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .client-brand-logo.ncb-logo {
+      max-height: 64px;
+    }
+
+    .client-brand-caption {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .client-brand-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .client-brand-caption {
+        white-space: normal;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="client-brand-bar">
+      <div class="client-brand-logos">
+        <img class="client-brand-logo ncb-logo" src="../assets/ncb-logo.png" alt="NCB Management Services Incorporated logo" />
+        <img class="client-brand-logo" src="../assets/prodigal-logo.png" alt="Prodigal logo" />
+      </div>
+      <span class="client-brand-caption">Client Workflow Walkthrough</span>
+    </div>
+    <h1>NCB Consumer Authentication Workflow</h1>
+    <p>Interactive client walkthrough for the revised auth-only flow. Use the scenario buttons to explain how the agent locates the exact consumer first, then authenticates without relying on phone alone.</p>
+  </header>
+
+  <main>
+    <aside class="panel sidebar">
+      <div class="scenario-buttons" id="scenarioButtons"></div>
+      <section class="details">
+        <span class="button-kicker" id="scenarioKicker">Scenario</span>
+        <h2 id="scenarioTitle"></h2>
+        <p id="scenarioSummary"></p>
+        <div class="pill-row" id="scenarioPills"></div>
+        <h3>Talk Track</h3>
+        <ul id="scenarioTalkTrack"></ul>
+        <h3>Agent Logic</h3>
+        <ul id="scenarioLogic"></ul>
+      </section>
+      <div class="rule-card">
+        <strong>Core auth rule:</strong> phone alone is never enough. The workflow must either verify name plus one private element or locate with two private elements and then verify name.
+      </div>
+    </aside>
+
+    <section class="panel diagram-panel">
+      <div class="toolbar">
+        <strong>Workflow Diagram</strong>
+        <div class="toolbar-actions">
+          <button type="button" id="copyMermaid">Copy Mermaid</button>
+          <button type="button" id="downloadSvg">Download SVG</button>
+          <button type="button" id="resetScenario">Reset View</button>
+        </div>
+      </div>
+      <div class="diagram-wrap">
+        <div id="diagram"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+
+    const scenarios = {
+      overview: {
+        kicker: "Overview",
+        title: "Locate exact consumer first, then authenticate",
+        summary: "The agent starts with the inbound phone lookup, routes into one of five scenarios, and never treats phone alone as authentication.",
+        tags: ["Phone is not auth", "No disclosure before auth", "Auth-only scope"],
+        talkTrack: [
+          "First, the system tries to understand what the phone number tells us.",
+          "Then it either has an exact consumer, multiple possible consumers, or no useful phone match.",
+          "Only after the exact consumer is located does the agent complete authentication."
+        ],
+        logic: [
+          "Scenario 1 and 2 share the same auth cascade.",
+          "Scenario 3 resolves a list of possible consumers using one unique DOB, SSN4, or ZIP match.",
+          "Scenario 4 asks for phone or account number first; if neither is available, it uses any two of DOB, SSN4, ZIP.",
+          "Scenario 5 routes into one of the first four scenarios based on lookup outcome."
+        ]
+      },
+      s1: {
+        kicker: "Scenario 1",
+        title: "Single phone, single consumer, single account",
+        summary: "The phone lookup locates the exact consumer and account, but the caller still must authenticate.",
+        tags: ["Direct consumer", "Name first", "DOB to SSN4 to ZIP"],
+        talkTrack: [
+          "This is the cleanest path: the phone number maps to one consumer and one account.",
+          "Even then, the phone number is only a locator. It is not authentication.",
+          "The agent verifies legal name, then asks DOB. If DOB fails, it cascades to SSN4, then ZIP."
+        ],
+        logic: [
+          "Lookup result goes to exact consumer located.",
+          "Verify legal name.",
+          "Authenticate via DOB, then SSN4, then ZIP.",
+          "If none match, stop auth with no disclosure."
+        ]
+      },
+      s2: {
+        kicker: "Scenario 2",
+        title: "Single phone, same consumer, multiple accounts",
+        summary: "Authentication is identical to Scenario 1. Account selection is intentionally outside this diagram.",
+        tags: ["Same auth as S1", "Multiple accounts later", "No auto-pick during auth"],
+        talkTrack: [
+          "The phone number maps to one consumer, but that consumer has multiple accounts.",
+          "For authentication, this behaves the same as Scenario 1.",
+          "After auth, the separate account-selection flow can ask which account they want to discuss."
+        ],
+        logic: [
+          "Lookup result goes to exact consumer located.",
+          "Verify legal name.",
+          "Authenticate via DOB, then SSN4, then ZIP.",
+          "Post-auth account selection is out of scope here."
+        ]
+      },
+      s3: {
+        kicker: "Scenario 3",
+        title: "Single phone, multiple consumers",
+        summary: "Use the returned consumer list and ask DOB, SSN4, ZIP until exactly one consumer is identified.",
+        tags: ["Shared phone", "Unique match", "Then verify name"],
+        talkTrack: [
+          "The API returns several consumers for the same phone number.",
+          "The agent does not ask the caller to pick from names or reveal account information.",
+          "It asks DOB first, then SSN4, then ZIP as needed. One matching field is enough only if it uniquely narrows the list to one consumer."
+        ],
+        logic: [
+          "Compare DOB against the returned list.",
+          "If DOB matches exactly one consumer, verify legal name.",
+          "If DOB is ambiguous or misses, ask SSN4, then ZIP.",
+          "If no field produces one exact consumer, stop with no disclosure."
+        ]
+      },
+      s4: {
+        kicker: "Scenario 4",
+        title: "Unknown phone number",
+        summary: "Ask for phone number or account number first. If neither is available, locate the consumer using any two of DOB, SSN4, ZIP.",
+        tags: ["Unknown caller phone", "Account or phone prompt", "Any 2 private fields"],
+        talkTrack: [
+          "When the inbound phone is unknown, the agent asks for a phone number or account number in the same prompt.",
+          "If a phone number is provided, it loops back into Scenarios 1 through 3 based on lookup result.",
+          "If an account number is provided, account lookup returns a single consumer and the normal direct-consumer auth cascade applies.",
+          "If neither is available, the agent asks for any two of DOB, SSN4, and ZIP to locate the exact consumer."
+        ],
+        logic: [
+          "Phone number provided: perform phone lookup and route by result.",
+          "Account number provided: account lookup returns single consumer, then verify name and run auth cascade.",
+          "Neither provided: ask for any 2 of DOB, SSN4, ZIP.",
+          "If two fields do not locate an exact consumer, stop with no disclosure."
+        ]
+      },
+      s5: {
+        kicker: "Scenario 5",
+        title: "Workplace or shared phone",
+        summary: "Workplace numbers are not a separate auth method. They route into the matching scenario by lookup outcome.",
+        tags: ["Shared business phone", "Routes to S1-S4", "No special shortcut"],
+        talkTrack: [
+          "A workplace phone can behave like a direct match, a multi-consumer match, or an unknown number.",
+          "The agent should not treat workplace context as authentication.",
+          "It simply routes to Scenario 1 or 2 for a single consumer, Scenario 3 for multiple consumers, or Scenario 4 if the number is unknown."
+        ],
+        logic: [
+          "Single consumer outcome routes to direct-consumer authentication.",
+          "Multiple consumer outcome routes to DOB, SSN4, ZIP unique-match handling.",
+          "Unknown outcome routes to the phone/account-number prompt.",
+          "No disclosure occurs until the chosen path authenticates."
+        ]
+      }
+    };
+
+    const scenarioButtons = document.getElementById("scenarioButtons");
+    const kicker = document.getElementById("scenarioKicker");
+    const title = document.getElementById("scenarioTitle");
+    const summary = document.getElementById("scenarioSummary");
+    const pills = document.getElementById("scenarioPills");
+    const talkTrack = document.getElementById("scenarioTalkTrack");
+    const logic = document.getElementById("scenarioLogic");
+    const toast = document.getElementById("toast");
+    const styleBlock = `
+  classDef startFinish fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#052e16;
+  classDef lookup fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+  classDef scenario fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+  classDef authStep fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03;
+  classDef decision fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#422006;
+  classDef stopFlow fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+  classDef ruleNote fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,color:#111827;`;
+
+    const diagrams = {
+      overview: `flowchart TD
+  startNode([Inbound consumer call])
+  opening["Opening disclosures and neutral greeting"]
+  inboundPhoneLookup["API: lookup inbound caller phone"]
+  phoneLookupResult{"Inbound phone lookup result"}
+
+  startNode --> opening --> inboundPhoneLookup --> phoneLookupResult
+  phoneLookupResult -->|"Scenario 1: single phone, single consumer, single account"| directConsumer["Exact consumer located"]
+  phoneLookupResult -->|"Scenario 2: single phone, single consumer, multiple accounts"| directConsumer
+  phoneLookupResult -->|"Scenario 3: single phone, multiple consumers"| multipleConsumers["Use returned consumer list"]
+  phoneLookupResult -->|"Scenario 4: unknown phone"| unknownPhonePrompt["Ask for phone number or account number"]
+  phoneLookupResult -->|"Scenario 5: workplace or shared phone"| workplaceRoute["Route by lookup outcome"]
+
+  workplaceRoute -->|"Single consumer"| directConsumer
+  workplaceRoute -->|"Multiple consumers"| multipleConsumers
+  workplaceRoute -->|"Unknown number"| unknownPhonePrompt
+
+  directConsumer --> directAuth["Verify legal name, then DOB to SSN4 to ZIP"]
+  multipleConsumers --> listAuth["Ask DOB, then SSN4, then ZIP until one unique consumer matches"]
+  unknownPhonePrompt --> idGate{"Identifier provided?"}
+  idGate -->|"Phone"| inboundPhoneLookup
+  idGate -->|"Account"| directConsumer
+  idGate -->|"Neither"| twoField["Find exact consumer using any 2 of DOB, SSN4, ZIP"]
+
+  directAuth --> authComplete([Auth complete])
+  listAuth --> verifyLocatedName["Verify legal name"]
+  twoField --> verifyLocatedName
+  verifyLocatedName --> authComplete
+  directAuth --> stopNode([Stop auth if mismatch])
+  listAuth --> stopNode
+  twoField --> stopNode
+
+  rule["Rule: phone alone is never enough. Locate exact consumer first, then authenticate."]
+
+  class startNode,authComplete startFinish;
+  class inboundPhoneLookup lookup;
+  class opening,directConsumer,multipleConsumers,unknownPhonePrompt,workplaceRoute,twoField scenario;
+  class directAuth,listAuth,verifyLocatedName authStep;
+  class phoneLookupResult,idGate decision;
+  class stopNode stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      s1: `flowchart TD
+  startNode([Scenario 1])
+  phoneLookup["API: inbound phone lookup"]
+  directConsumer["Single consumer and single account found"]
+  verifyName["Verify legal name"]
+  nameGate{"Name matches?"}
+  dobCheck["Ask DOB"]
+  dobGate{"DOB matches?"}
+  ssn4Check["Ask SSN4"]
+  ssn4Gate{"SSN4 matches?"}
+  zipCheck["Ask ZIP"]
+  zipGate{"ZIP matches?"}
+  authComplete([Auth complete])
+  authFailed([Stop auth, no disclosure])
+
+  startNode --> phoneLookup --> directConsumer --> verifyName --> nameGate
+  nameGate -->|"Yes"| dobCheck --> dobGate
+  nameGate -->|"No"| authFailed
+  dobGate -->|"Yes"| authComplete
+  dobGate -->|"No"| ssn4Check --> ssn4Gate
+  ssn4Gate -->|"Yes"| authComplete
+  ssn4Gate -->|"No"| zipCheck --> zipGate
+  zipGate -->|"Yes"| authComplete
+  zipGate -->|"No"| authFailed
+
+  rule["Scenario 1 rule: phone locates the consumer, but name plus one private field authenticates the caller."]
+
+  class startNode,authComplete startFinish;
+  class phoneLookup lookup;
+  class directConsumer scenario;
+  class verifyName,dobCheck,ssn4Check,zipCheck authStep;
+  class nameGate,dobGate,ssn4Gate,zipGate decision;
+  class authFailed stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      s2: `flowchart TD
+  startNode([Scenario 2])
+  phoneLookup["API: inbound phone lookup"]
+  directConsumer["Single consumer found with multiple accounts"]
+  verifyName["Verify legal name"]
+  nameGate{"Name matches?"}
+  dobCheck["Ask DOB"]
+  dobGate{"DOB matches?"}
+  ssn4Check["Ask SSN4"]
+  ssn4Gate{"SSN4 matches?"}
+  zipCheck["Ask ZIP"]
+  zipGate{"ZIP matches?"}
+  authComplete([Auth complete])
+  authFailed([Stop auth, no disclosure])
+
+  startNode --> phoneLookup --> directConsumer --> verifyName --> nameGate
+  nameGate -->|"Yes"| dobCheck --> dobGate
+  nameGate -->|"No"| authFailed
+  dobGate -->|"Yes"| authComplete
+  dobGate -->|"No"| ssn4Check --> ssn4Gate
+  ssn4Gate -->|"Yes"| authComplete
+  ssn4Gate -->|"No"| zipCheck --> zipGate
+  zipGate -->|"Yes"| authComplete
+  zipGate -->|"No"| authFailed
+
+  rule["Scenario 2 rule: auth is identical to Scenario 1. Choosing which account is post-auth and out of scope here."]
+
+  class startNode,authComplete startFinish;
+  class phoneLookup lookup;
+  class directConsumer scenario;
+  class verifyName,dobCheck,ssn4Check,zipCheck authStep;
+  class nameGate,dobGate,ssn4Gate,zipGate decision;
+  class authFailed stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      s3: `flowchart TD
+  startNode([Scenario 3])
+  phoneLookup["API: phone lookup returns multiple consumers"]
+  dobCheck["Ask DOB and compare against list"]
+  dobGate{"Exactly one consumer matched?"}
+  ssn4Check["Ask SSN4 and compare remaining candidates"]
+  ssn4Gate{"Exactly one consumer matched?"}
+  zipCheck["Ask ZIP and compare remaining candidates"]
+  zipGate{"Exactly one consumer matched?"}
+  verifyName["Verify legal name for located consumer"]
+  nameGate{"Name matches?"}
+  authComplete([Auth complete])
+  unresolved([Stop auth, no disclosure])
+
+  startNode --> phoneLookup --> dobCheck --> dobGate
+  dobGate -->|"Yes"| verifyName
+  dobGate -->|"No or multiple"| ssn4Check --> ssn4Gate
+  ssn4Gate -->|"Yes"| verifyName
+  ssn4Gate -->|"No or multiple"| zipCheck --> zipGate
+  zipGate -->|"Yes"| verifyName
+  zipGate -->|"No or multiple"| unresolved
+  verifyName --> nameGate
+  nameGate -->|"Yes"| authComplete
+  nameGate -->|"No"| unresolved
+
+  rule["Scenario 3 rule: one private field is enough only when it uniquely identifies exactly one consumer from the returned list."]
+
+  class startNode,authComplete startFinish;
+  class phoneLookup lookup;
+  class dobCheck,ssn4Check,zipCheck,verifyName authStep;
+  class dobGate,ssn4Gate,zipGate,nameGate decision;
+  class unresolved stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      s4: `flowchart TD
+  startNode([Scenario 4])
+  unknownPhone["Inbound phone is unknown"]
+  askIdentifier["Ask for phone number or account number"]
+  identifierGate{"Caller provides identifier?"}
+  phoneLookup["API: lookup provided phone number"]
+  accountLookup["API: lookup account number"]
+  directConsumer["Account lookup returns single consumer"]
+  routePhone["Route to Scenario 1, 2, or 3 by phone lookup result"]
+  twoField["Ask for any 2 of DOB, SSN4, ZIP"]
+  twoFieldGate{"Exact consumer found?"}
+  verifyName["Verify legal name"]
+  nameGate{"Name matches?"}
+  authComplete([Auth complete])
+  unresolved([Stop auth, no disclosure])
+
+  startNode --> unknownPhone --> askIdentifier --> identifierGate
+  identifierGate -->|"Phone"| phoneLookup --> routePhone
+  identifierGate -->|"Account"| accountLookup --> directConsumer --> verifyName
+  identifierGate -->|"Neither"| twoField --> twoFieldGate
+  twoFieldGate -->|"Yes"| verifyName
+  twoFieldGate -->|"No"| unresolved
+  verifyName --> nameGate
+  nameGate -->|"Yes"| authComplete
+  nameGate -->|"No"| unresolved
+
+  rule["Scenario 4 rule: ask for phone or account first. If neither is available, any 2 of DOB, SSN4, ZIP can locate the exact consumer, then name must match."]
+
+  class startNode,authComplete startFinish;
+  class phoneLookup,accountLookup lookup;
+  class unknownPhone,askIdentifier,directConsumer,routePhone scenario;
+  class twoField,verifyName authStep;
+  class identifierGate,twoFieldGate,nameGate decision;
+  class unresolved stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      s5: `flowchart TD
+  startNode([Scenario 5])
+  workplacePhone["Workplace or shared phone number"]
+  lookupOutcome{"Lookup outcome"}
+  scenarioOneTwo["Single consumer found"]
+  scenarioThree["Multiple consumers found"]
+  scenarioFour["Unknown number"]
+  directAuth["Follow Scenario 1 or 2 auth cascade"]
+  listAuth["Follow Scenario 3 unique-match flow"]
+  unknownAuth["Follow Scenario 4 phone or account prompt"]
+  authComplete([Auth complete if routed path passes])
+  unresolved([Stop auth if routed path cannot locate or verify])
+
+  startNode --> workplacePhone --> lookupOutcome
+  lookupOutcome -->|"Single consumer"| scenarioOneTwo --> directAuth
+  lookupOutcome -->|"Multiple consumers"| scenarioThree --> listAuth
+  lookupOutcome -->|"Unknown"| scenarioFour --> unknownAuth
+  directAuth --> authComplete
+  listAuth --> authComplete
+  unknownAuth --> authComplete
+  directAuth --> unresolved
+  listAuth --> unresolved
+  unknownAuth --> unresolved
+
+  rule["Scenario 5 rule: workplace phone is not a separate auth shortcut. It routes into Scenario 1, 2, 3, or 4."]
+
+  class startNode,authComplete startFinish;
+  class workplacePhone,scenarioOneTwo,scenarioThree,scenarioFour scenario;
+  class directAuth,listAuth,unknownAuth authStep;
+  class lookupOutcome decision;
+  class unresolved stopFlow;
+  class rule ruleNote;
+${styleBlock}`
+    };
+    let currentDiagramSource = diagrams.overview;
+
+    const buttonOrder = [
+      ["overview", "Overview"],
+      ["s1", "Scenario 1"],
+      ["s2", "Scenario 2"],
+      ["s3", "Scenario 3"],
+      ["s4", "Scenario 4"],
+      ["s5", "Scenario 5"]
+    ];
+
+    function renderList(element, items) {
+      element.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        element.appendChild(li);
+      });
+    }
+
+    async function renderDiagram(key) {
+      currentDiagramSource = diagrams[key];
+      document.getElementById("diagram").innerHTML = "";
+      const renderId = `authWorkflowDiagram-${key}-${Date.now()}`;
+      const { svg } = await mermaid.render(renderId, currentDiagramSource);
+      document.getElementById("diagram").innerHTML = svg;
+    }
+
+    function setScenario(key) {
+      const item = scenarios[key];
+      kicker.textContent = item.kicker;
+      title.textContent = item.title;
+      summary.textContent = item.summary;
+      pills.innerHTML = "";
+      item.tags.forEach((tag, index) => {
+        const span = document.createElement("span");
+        span.className = `pill ${index === 0 ? "lookup" : index === 1 ? "auth" : "success"}`;
+        span.textContent = tag;
+        pills.appendChild(span);
+      });
+      renderList(talkTrack, item.talkTrack);
+      renderList(logic, item.logic);
+      document.querySelectorAll(".scenario-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.scenario === key);
+      });
+      renderDiagram(key).catch((error) => {
+        document.getElementById("diagram").textContent = `Unable to render diagram: ${error.message}`;
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.setTimeout(() => toast.classList.remove("visible"), 1600);
+    }
+
+    buttonOrder.forEach(([key, label]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "scenario-button";
+      button.dataset.scenario = key;
+      button.innerHTML = `<span class="button-kicker">${label}</span>${scenarios[key].title}`;
+      button.addEventListener("click", () => setScenario(key));
+      scenarioButtons.appendChild(button);
+    });
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryTextColor: "#0f172a",
+        lineColor: "#64748b"
+      }
+    });
+
+    document.getElementById("copyMermaid").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(currentDiagramSource);
+      showToast("Current scenario Mermaid copied");
+    });
+
+    document.getElementById("downloadSvg").addEventListener("click", () => {
+      const svgText = document.querySelector("#diagram svg").outerHTML;
+      const blob = new Blob([svgText], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ncb-consumer-auth-workflow.svg";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("SVG downloaded");
+    });
+
+    document.getElementById("resetScenario").addEventListener("click", () => setScenario("overview"));
+
+    setScenario("overview");
+  </script>
+</body>
+</html>

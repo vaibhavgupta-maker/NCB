@@ -438,10 +438,69 @@
         max-height: none;
       }
     }
+
+
+    .client-brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .client-brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .client-brand-logo {
+      display: block;
+      max-height: 54px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .client-brand-logo.ncb-logo {
+      max-height: 64px;
+    }
+
+    .client-brand-caption {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .client-brand-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .client-brand-caption {
+        white-space: normal;
+      }
+    }
+
   </style>
 </head>
 <body>
   <header>
+    <div class="client-brand-bar">
+      <div class="client-brand-logos">
+        <img class="client-brand-logo ncb-logo" src="../assets/ncb-logo.png" alt="NCB Management Services Incorporated logo" />
+        <img class="client-brand-logo" src="../assets/prodigal-logo.png" alt="Prodigal logo" />
+      </div>
+      <span class="client-brand-caption">Client Workflow Walkthrough</span>
+    </div>
     <h1>NCB Payment Scenarios Walkthrough</h1>
     <p>Interactive client walkthrough for the staged Release 1-4 rollout. Select a release to show which scenarios the bot handles directly and which scenarios transfer to human collectors.</p>
   </header>

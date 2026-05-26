@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NCB Payment Scenarios Walkthrough</title>
+  <title>NCB x Prodigal Workflow Walkthroughs</title>
   <style>
     :root {
       --bg: #f8fafc;
@@ -11,1113 +11,252 @@
       --ink: #0f172a;
       --muted: #64748b;
       --line: #e2e8f0;
-      --blue: #2563eb;
-      --blue-soft: #dbeafe;
-      --purple: #7c3aed;
-      --purple-soft: #ede9fe;
-      --amber: #d97706;
-      --amber-soft: #fef3c7;
-      --green: #15803d;
-      --green-soft: #dcfce7;
-      --red: #dc2626;
-      --red-soft: #fee2e2;
-      --gray-soft: #f1f5f9;
-      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      --blue: #00558c;
+      --blue-soft: #e0f2fe;
+      --orange: #f58220;
+      --orange-soft: #fff7ed;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: var(--bg);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(245, 130, 32, 0.16), transparent 32rem),
+        radial-gradient(circle at bottom right, rgba(0, 85, 140, 0.16), transparent 34rem),
+        var(--bg);
       color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.5;
     }
 
     header {
-      padding: 30px 40px 22px;
-      background: linear-gradient(135deg, #172554, #581c87);
-      color: white;
+      padding: 34px 28px 20px;
     }
 
-    header p {
-      max-width: 980px;
-      margin: 8px 0 0;
-      color: #e0e7ff;
-      font-size: 16px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(28px, 4vw, 44px);
-      letter-spacing: -0.03em;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 22px;
-      letter-spacing: -0.02em;
-    }
-
-    h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-
-    main {
-      display: grid;
-      grid-template-columns: minmax(330px, 430px) 1fr;
-      gap: 20px;
-      padding: 24px;
-      max-width: 1640px;
+    .shell {
+      width: min(1120px, calc(100% - 40px));
       margin: 0 auto;
     }
 
-    .panel {
-      background: var(--panel);
+    .brand-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 20px;
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.92);
       box-shadow: var(--shadow);
     }
 
-    .sidebar {
-      position: sticky;
-      top: 20px;
-      align-self: start;
-      overflow: hidden;
-    }
-
-    .scenario-buttons {
-      display: grid;
-      gap: 8px;
-      padding: 16px;
-      border-bottom: 1px solid var(--line);
-      max-height: 44vh;
-      overflow: auto;
-    }
-
-    .release-selector {
-      display: grid;
-      gap: 8px;
-      margin: 16px 16px 0;
-      padding: 14px;
-      border: 1px solid #fed7aa;
-      border-radius: 14px;
-      background: #fff7ed;
-    }
-
-    .release-selector-label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .release-buttons {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .release-summary {
-      display: grid;
-      gap: 8px;
-      padding: 12px;
-      border: 1px solid #fdba74;
-      border-radius: 12px;
-      background: #ffedd5;
-      font-size: 13px;
-      color: #334155;
-    }
-
-    .release-summary strong {
-      color: var(--ink);
-    }
-
-    .release-summary-row {
-      display: grid;
-      gap: 3px;
-    }
-
-    button.release-button {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: white;
-      color: var(--ink);
-      cursor: pointer;
-      padding: 10px 12px;
-      text-align: left;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 800;
-      transition: 160ms ease;
-    }
-
-    button.release-button:hover {
-      border-color: var(--blue);
-      background: var(--blue-soft);
-      transform: translateY(-1px);
-    }
-
-    button.release-button.active {
-      border-color: var(--blue);
-      background: var(--blue-soft);
-      box-shadow: inset 4px 0 0 var(--blue);
-      color: #1e3a8a;
-    }
-
-    button.scenario-button {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: white;
-      color: var(--ink);
-      cursor: pointer;
-      padding: 12px 14px;
-      text-align: left;
-      font: inherit;
-      transition: 160ms ease;
-    }
-
-    button.scenario-button:hover {
-      border-color: var(--purple);
-      background: #faf5ff;
-      transform: translateY(-1px);
-    }
-
-    button.scenario-button.active {
-      border-color: var(--purple);
-      background: var(--purple-soft);
-      box-shadow: inset 4px 0 0 var(--purple);
-    }
-
-    button.scenario-button.supported {
-      border-color: #86efac;
-      background: #f0fdf4;
-    }
-
-    button.scenario-button.supported.active {
-      border-color: var(--green);
-      background: var(--green-soft);
-      box-shadow: inset 4px 0 0 var(--green);
-    }
-
-    button.scenario-button.not-supported {
-      border-color: #cbd5e1;
-      background: #f8fafc;
-      color: #64748b;
-    }
-
-    button.scenario-button.not-supported.active {
-      border-color: #94a3b8;
-      background: var(--gray-soft);
-      box-shadow: inset 4px 0 0 #64748b;
-    }
-
-    .scenario-title-row {
+    .logos {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 24px;
+      flex-wrap: wrap;
     }
 
-    .support-badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 11px;
+    .logo {
+      display: block;
+      width: auto;
+      max-height: 64px;
+      object-fit: contain;
+    }
+
+    .logo.ncb { max-height: 76px; }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 13px;
       font-weight: 900;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
+      text-align: right;
     }
 
-    .support-badge.supported {
-      background: var(--green-soft);
-      color: #166534;
-      border: 1px solid #86efac;
-    }
+    main { padding: 18px 0 48px; }
 
-    .support-badge.not-supported {
-      background: #e2e8f0;
-      color: #475569;
-      border: 1px solid #cbd5e1;
-    }
-
-    .button-kicker {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 2px;
-    }
-
-    .details {
-      padding: 20px;
-    }
-
-    .details p {
-      margin: 0 0 14px;
-      color: #334155;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 12px 0 18px;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      border: 1px solid var(--line);
-      background: var(--gray-soft);
-    }
-
-    .pill.lookup {
-      background: var(--purple-soft);
-      color: #4c1d95;
-      border-color: #c4b5fd;
-    }
-
-    .pill.offer {
-      background: var(--blue-soft);
-      color: #1e3a8a;
-      border-color: #93c5fd;
-    }
-
-    .pill.auth {
-      background: var(--amber-soft);
-      color: #92400e;
-      border-color: #fcd34d;
-    }
-
-    .pill.success {
-      background: var(--green-soft);
-      color: #166534;
-      border-color: #86efac;
-    }
-
-    ul {
-      margin: 8px 0 18px;
-      padding-left: 20px;
-    }
-
-    li {
-      margin: 7px 0;
-      color: #334155;
-    }
-
-    .rule-card {
-      margin: 16px 20px 20px;
-      padding: 14px;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 14px;
-      color: #78350f;
-      font-size: 14px;
-    }
-
-    .diagram-panel {
+    .hero {
+      margin-top: 22px;
+      padding: 44px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, #0f172a, #0b4f7a);
+      color: white;
+      box-shadow: var(--shadow);
       overflow: hidden;
+      position: relative;
     }
 
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--line);
-      background: #f8fafc;
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -140px -180px auto;
+      width: 360px;
+      height: 360px;
+      border-radius: 999px;
+      background: rgba(245, 130, 32, 0.32);
     }
 
-    .toolbar strong {
-      font-size: 14px;
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
     }
 
-    .toolbar-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .toolbar button {
-      border: 1px solid var(--line);
-      background: white;
-      color: var(--ink);
-      border-radius: 10px;
-      padding: 8px 10px;
-      cursor: pointer;
-      font: inherit;
-      font-size: 13px;
-    }
-
-    .toolbar button:hover {
-      border-color: var(--purple);
-      color: var(--purple);
-    }
-
-    .diagram-wrap {
-      padding: 18px;
-      overflow: auto;
-      min-height: 720px;
-      background: white;
-    }
-
-    #diagram {
-      min-width: 980px;
-    }
-
-    #diagram svg {
-      max-width: none;
-      width: 100%;
-      height: auto;
-    }
-
-    .diagram-empty {
-      display: grid;
-      place-items: center;
-      min-height: 620px;
-      border: 2px dashed #cbd5e1;
-      border-radius: 18px;
-      background: #f8fafc;
-      color: #475569;
-      text-align: center;
-      padding: 30px;
-    }
-
-    .diagram-empty strong {
-      display: block;
-      margin-bottom: 8px;
-      color: #334155;
+    .hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 18px 0 0;
+      color: #dbeafe;
       font-size: 18px;
     }
 
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #0f172a;
-      color: white;
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 24px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      min-height: 330px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.94);
       box-shadow: var(--shadow);
-      opacity: 0;
-      transform: translateY(8px);
-      transition: 160ms ease;
-      pointer-events: none;
+      text-decoration: none;
+      color: inherit;
+      transition: 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--orange);
+    }
+
+    .tag {
+      width: fit-content;
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: var(--orange-soft);
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 18px 0 10px;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    .card p {
+      margin: 0;
+      color: #475569;
+      font-size: 16px;
+    }
+
+    .bullets {
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: #334155;
+      font-size: 15px;
+    }
+
+    .bullets li::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 10px;
+      border-radius: 999px;
+      background: var(--orange);
+    }
+
+    .open-link {
+      margin-top: auto;
+      padding-top: 28px;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    footer {
+      padding: 18px 0 38px;
+      color: var(--muted);
       font-size: 14px;
+      text-align: center;
     }
 
-    .toast.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 1080px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: static;
-      }
-
-      .scenario-buttons {
-        max-height: none;
-      }
+    @media (max-width: 820px) {
+      .brand-card { align-items: flex-start; flex-direction: column; }
+      .eyebrow { text-align: left; }
+      .hero { padding: 30px; }
+      .cards { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>NCB Payment Scenarios Walkthrough</h1>
-    <p>Interactive client walkthrough for the staged Release 1-4 rollout. Select a release to show which scenarios the bot handles directly and which scenarios transfer to human collectors.</p>
+    <div class="shell brand-card">
+      <div class="logos">
+        <img class="logo ncb" src="assets/ncb-logo.png" alt="NCB Management Services Incorporated logo" />
+        <img class="logo" src="assets/prodigal-logo.png" alt="Prodigal logo" />
+      </div>
+      <div class="eyebrow">Client Workflow Walkthroughs</div>
+    </div>
   </header>
 
-  <main>
-    <aside class="panel sidebar">
-      <div class="release-selector">
-        <span class="release-selector-label">Release View</span>
-        <div class="release-buttons" id="releaseButtons"></div>
-        <div class="release-summary" id="releaseSummary"></div>
-      </div>
-      <div class="scenario-buttons" id="scenarioButtons"></div>
-      <section class="details">
-        <span class="button-kicker" id="scenarioKicker">Scenario</span>
-        <h2 id="scenarioTitle"></h2>
-        <p id="scenarioSummary"></p>
-        <div class="pill-row" id="scenarioPills"></div>
-        <h3>Talk Track</h3>
-        <ul id="scenarioTalkTrack"></ul>
-        <h3>Agent Logic</h3>
-        <ul id="scenarioLogic"></ul>
-      </section>
-      <div class="rule-card">
-        <strong>Release rule:</strong> select Release 1-4 to show only what the bot supports in that phase. Unsupported tabs stay clickable, appear greyed out, and show the transfer-to-human handling.
-      </div>
-    </aside>
+  <main class="shell">
+    <section class="hero">
+      <h1>NCB Voice AI Workflow Walkthroughs</h1>
+      <p>Interactive, client-ready walkthroughs for authentication and payment workflow behavior across the NCB voice AI rollout.</p>
+    </section>
 
-    <section class="panel diagram-panel">
-      <div class="toolbar">
-        <strong>Payment Scenario Diagram</strong>
-        <div class="toolbar-actions">
-          <button type="button" id="copyMermaid">Copy Mermaid</button>
-          <button type="button" id="downloadSvg">Download SVG</button>
-          <button type="button" id="resetScenario">Reset View</button>
-        </div>
-      </div>
-      <div class="diagram-wrap">
-        <div id="diagram"></div>
-      </div>
+    <section class="cards" aria-label="Workflow walkthrough links">
+      <a class="card" href="auth-workflow/">
+        <span class="tag">Consumer Authentication</span>
+        <h2>Authentication Workflow</h2>
+        <p>Scenario-by-scenario walkthrough for identifying consumers, matching phone/account data, and applying the DOB, SSN4, and ZIP verification cascade.</p>
+        <ul class="bullets">
+          <li>Known and unknown phone number handling</li>
+          <li>Single and multiple consumer matching</li>
+          <li>Compliance-friendly authentication flow</li>
+        </ul>
+        <span class="open-link">Open Authentication Workflow -></span>
+      </a>
+
+      <a class="card" href="payment-workflows/">
+        <span class="tag">Payment Negotiation</span>
+        <h2>Payment Release Workflow</h2>
+        <p>Release-based payment workflow walkthrough showing what the bot handles directly and what routes to agent transfer.</p>
+        <ul class="bullets">
+          <li>Release 1 through Release 4 capabilities</li>
+          <li>Balance, settlement, PPA, and prior-offer paths</li>
+          <li>Scenario Guide with default and consumer-triggered routing</li>
+        </ul>
+        <span class="open-link">Open Payment Workflow -></span>
+      </a>
     </section>
   </main>
 
-  <div class="toast" id="toast">Copied</div>
-
-  <script type="module">
-    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-
-    const releases = {
-      release1: {
-        label: "Release 1",
-        enabledCapabilities: ["balanceFull", "balanceFullPpa"]
-      },
-      release2: {
-        label: "Release 2",
-        enabledCapabilities: ["balanceFull", "balanceFullPpa", "settlementFull"]
-      },
-      release3: {
-        label: "Release 3",
-        enabledCapabilities: ["balanceFull", "balanceFullPpa", "settlementFull", "settlementPpa"]
-      },
-      release4: {
-        label: "Release 4",
-        enabledCapabilities: ["balanceFull", "balanceFullPpa", "settlementFull", "settlementPpa", "priorOffer"],
-        note: "Custom settlement offers outside API-approved options still route to agent transfer."
-      }
-    };
-
-    const releaseOrder = ["release1", "release2", "release3", "release4"];
-
-    const tabs = {
-      scenarioGuide: {
-        label: "Scenario Guide",
-        full: {
-          kicker: "Scenario Guide",
-          title: "Scenario Guide",
-          summary: "Use this release-agnostic guide to explain the general path the agent follows. Release selection only changes whether the bot handles the selected path directly or transfers to a human collector.",
-          tags: ["Guide", "Release agnostic", "Routing"],
-          talkTrack: [
-            "The default bot flow starts with Balance in Full, then Balance in Full with PPA, then Settlement in Full, then Settlement in Full with PPA, and finally agent transfer if no path works.",
-            "If the consumer asks for settlement directly, the bot bypasses the balance-in-full pieces and enters the settlement tree.",
-            "If the consumer says an offer was sent, the bot bypasses the default hierarchy and enters the Prior Offer Sent tree.",
-            "Release selection decides whether each scenario is handled by the bot or routed to agent transfer.",
-            "Use this guide first to explain the overall path, then select release-specific tabs for handling detail."
-          ],
-          logic: [
-            "Scenario Guide does not change across releases.",
-            "Release 1 supports balance-in-full single payment and PPA only.",
-            "Release 2 adds Settlement in Full.",
-            "Release 3 adds Settlement in Full with PPA.",
-            "Release 4 adds Prior Offer Sent handling and is the final complete release."
-          ]
-        }
-      },
-      balanceFull: {
-        label: "Balance in Full",
-        full: {
-          kicker: "Balance in Full",
-          title: "Balance in Full",
-          summary: "The bot asks for the full balance in one payment and supports same-day or future-dated payment setup when requested.",
-          tags: ["Supported", "Single payment", "Card or ACH"],
-          talkTrack: [
-            "This is the first payment path because it resolves the account in one payment.",
-            "The bot asks whether the consumer can pay the full balance today.",
-            "If the consumer asks for a future date, the bot can schedule the one-time payment up to 60 days out.",
-            "If the consumer asks for a different unsupported arrangement, the bot transfers to a human collector."
-          ],
-          logic: [
-            "Fetch allowed payment methods before collecting card or ACH details.",
-            "Use frequency OneTime and installment count one.",
-            "Default to today unless the consumer requests a future payment date.",
-            "Validate any future date is within 60 days.",
-            "Validate the payment instrument and commit the payment setup."
-          ]
-        }
-      },
-      balanceFullPpa: {
-        label: "Balance in Full with PPA",
-        full: {
-          kicker: "Balance in Full with PPA",
-          title: "Balance in Full with PPA",
-          summary: "The bot offers a payment plan for the full balance, starting with 2-month and 4-month options before asking affordability.",
-          tags: ["Supported", "PPA", "API max terms"],
-          talkTrack: [
-            "The bot first offers the full balance over 2 months, then over 4 months.",
-            "If those options do not work, it asks what the consumer can afford monthly and builds the closest whole-month plan.",
-            "The first installment can be slightly higher so the remaining installments are equal.",
-            "Bi-monthly or weekly cadence is only discussed when the consumer asks for that cadence.",
-            "If the consumer selects bi-monthly or weekly, the bot asks for their payday and confirms installments can start one cadence after payday, not on salary day."
-          ],
-          logic: [
-            "API returns longest available terms for monthly, bi-monthly, and weekly plans.",
-            "Terms start at 1 month and cannot exceed the API-provided max for the selected cadence.",
-            "Use execute_code to calculate installments, first-installment adjustment, and dates.",
-            "For bi-monthly or weekly, collect payday and confirm the payday-plus-one-cadence date pattern before payment setup.",
-            "If the consumer contests all available cadence options, transfer to a human collector."
-          ]
-        }
-      },
-      settlementFull: {
-        label: "Settlement in Full",
-        full: {
-          kicker: "Settlement in Full",
-          title: "Settlement in Full",
-          summary: "The bot starts settlement in full at 100 percent, steps down by 5 percent, and can jump directly to the client limit when the consumer shows frustration or serious hardship.",
-          tags: ["Supported", "Settlement", "5% step-down"],
-          talkTrack: [
-            "Settlement in full starts only after balance-in-full options are not workable.",
-            "The bot starts at 100 percent and decreases the settlement percentage in 5 percent steps.",
-            "If the consumer shows frustration or communicates a serious hardship, the bot directly quotes the client limit settlement offer.",
-            "The client_limit_percentage is the lowest allowed settlement offer; the bot cannot quote or negotiate below it.",
-            "If the consumer accepts, the settlement is set up as a single card or ACH payment."
-          ],
-          logic: [
-            "Retrieve settlement constraints and client_limit_percentage from API-backed context.",
-            "Start at 100 percent before stepping down by 5 percent.",
-            "Jump to client_limit_percentage when serious hardship or frustration is detected.",
-            "Never offer below client_limit_percentage. If that offer is declined, transfer to a human collector.",
-            "Default payment date to today unless the consumer requests a future date.",
-            "Validate any future date is within 60 days before collecting payment details.",
-            "If the consumer requests unsupported handling, transfer to a human collector."
-          ]
-        }
-      },
-      settlementPpa: {
-        label: "Settlement in Full with PPA",
-        full: {
-          kicker: "Settlement in Full with PPA",
-          title: "Settlement in Full with PPA",
-          summary: "The bot offers three API-provided settlement PPA options: most savings, medium plan, and longest plan.",
-          tags: ["Supported", "3 API options", "Monthly default"],
-          talkTrack: [
-            "Settlement payment plans come from the settlement-offer array, not agent-invented terms.",
-            "The three options are most savings with the shortest term, a medium plan, and the longest plan.",
-            "The bot offers the most savings option first, then moves up to medium and longest if needed.",
-            "After the consumer agrees to an offer, the bot defaults to monthly unless the consumer asks for bi-monthly or weekly.",
-            "If the consumer selects bi-monthly or weekly, the bot asks for payday and confirms installments can start one cadence after payday, not on salary day."
-          ],
-          logic: [
-            "Use the settlement-offer array as the source of truth for amount, discount, savings, and term.",
-            "Offer array option one first: most savings and shortest term.",
-            "If declined, offer the medium plan; if declined again, offer the longest plan.",
-            "Once accepted, proceed monthly by default and only present bi-monthly or weekly when prompted by the consumer.",
-            "For bi-monthly or weekly, collect payday and confirm the payday-plus-one-cadence date pattern before payment setup.",
-            "If all three API options are declined, transfer to a human collector."
-          ]
-        }
-      },
-      priorOffer: {
-        label: "Prior Offer Sent",
-        full: {
-          kicker: "Prior Offer Sent",
-          title: "Prior Offer Sent",
-          summary: "When an offer was already communicated by SMS, email, or letter, the bot starts from that communicated offer.",
-          tags: ["Supported", "Communicated offer", "Savings"],
-          talkTrack: [
-            "The bot checks whether an offer has already been sent to the consumer.",
-            "If yes, it presents that offer first and explains the savings for paying it in full today.",
-            "The bot can also quote the savings for monthly, bi-monthly, or weekly maximum-term options.",
-            "If the consumer selects bi-monthly or weekly, the bot asks for payday and confirms dates can start one cadence after payday, not on salary day.",
-            "If the communicated offer is declined, it moves to the mid offer, then the lower offer, while continuing to mention savings."
-          ],
-          logic: [
-            "Use prior-offer data from API or account context.",
-            "Present one-time full payment on the communicated offer before plan options.",
-            "For plan options, use the highest available term for the selected cadence.",
-            "For bi-monthly or weekly, collect payday and confirm payday-plus-one-cadence installment dates before setup.",
-            "If lower communicated-offer handling is rejected, transfer to a human collector."
-          ]
-        }
-      }
-    };
-
-    const styleBlock = `
-  classDef startFinish fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#052e16;
-  classDef apiCall fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
-  classDef offerStep fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
-  classDef defaultPath fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
-  classDef consumerSignal fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
-  classDef calculation fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03;
-  classDef decision fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#422006;
-  classDef stopFlow fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
-  classDef ruleNote fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,color:#111827;`;
-
-    const commonCommit = `
-  scheduleDate["Use today by default; allow future date or plan start if requested"]
-  validateDate["Validate future scheduling is within 60 days"]
-  chooseMethod["Consumer chooses card or ACH"]
-  validateInstrument["Validate card or bank details"]
-  commitPayment["API: setup_payment_plan_via_card or setup_payment_plan_via_ach"]
-  successNode([Payment arrangement confirmed])
-
-  scheduleDate --> validateDate --> chooseMethod --> validateInstrument --> commitPayment --> successNode
-
-  class scheduleDate,validateDate,chooseMethod,validateInstrument calculation;
-  class commitPayment apiCall;
-  class successNode startFinish;`;
-
-    const diagrams = {
-      scenarioGuide: `flowchart TD
-  startNode([Consumer payment discussion])
-  defaultEntry["Agent normally starts here"]
-  directSettlement["Consumer asks about settling"]
-  communicatedOffer["Consumer mentions an offer they received"]
-  balanceFull["Balance in Full"]
-  balancePpa["Balance in Full with PPA"]
-  settlementFull["Settlement in Full"]
-  settlementPpa["Settlement in Full with PPA"]
-  priorOffer["Prior Offer Sent"]
-  releaseGate{"Supported in selected release?"}
-  botHandles["Bot handles selected scenario path"]
-  agentTransfer["Agent transfer for selected scenario"]
-  successNode([Payment path resolved])
-
-  startNode --> defaultEntry --> balanceFull --> balancePpa --> settlementFull --> settlementPpa --> agentTransfer
-  startNode --> directSettlement --> settlementFull
-  startNode --> communicatedOffer --> priorOffer
-  balanceFull --> releaseGate
-  balancePpa --> releaseGate
-  settlementFull --> releaseGate
-  settlementPpa --> releaseGate
-  priorOffer --> releaseGate
-  releaseGate -->|"Yes"| botHandles --> successNode
-  releaseGate -->|"No"| agentTransfer
-
-  rule["Blue path is the normal agent hierarchy. Purple paths are consumer cues that move the agent directly to the relevant tree."]
-
-  class startNode,successNode startFinish;
-  class defaultEntry,balanceFull,balancePpa,settlementFull,settlementPpa,botHandles defaultPath;
-  class directSettlement,communicatedOffer,priorOffer consumerSignal;
-  class releaseGate decision;
-  class agentTransfer stopFlow;
-  class rule ruleNote;
-${styleBlock}`,
-      balanceFull: `flowchart TD
-  startNode([Balance in Full])
-  getMethods["API: get_payment_methods"]
-  offerFull["Offer full balance in one payment"]
-  acceptedGate{"Accepted?"}
-  futureGate{"Future date requested?"}
-  validateFuture["Validate future date within 60 days"]
-  unsupportedAsk["Unsupported request or self-directed negotiation"]
-  transferAgent([Transfer to human collector])
-${commonCommit}
-
-  startNode --> getMethods --> offerFull --> acceptedGate
-  acceptedGate -->|"Yes"| futureGate
-  futureGate -->|"Yes"| validateFuture --> scheduleDate
-  futureGate -->|"No"| scheduleDate
-  acceptedGate -->|"No"| unsupportedAsk --> transferAgent
-
-  rule["Supported path: single full-balance payment. Other prompted paths transfer if not available in selected release."]
-
-  class startNode startFinish;
-  class getMethods apiCall;
-  class offerFull,unsupportedAsk offerStep;
-  class validateFuture calculation;
-  class acceptedGate,futureGate decision;
-  class transferAgent stopFlow;
-  class rule ruleNote;
-${styleBlock}`,
-      balanceFullPpa: `flowchart TD
-  startNode([Balance in Full with PPA])
-  apiMax["API: cadence-specific max terms"]
-  offerTwo["Offer 2-month monthly plan"]
-  twoGate{"Accepted?"}
-  offerFour["Offer 4-month monthly plan"]
-  fourGate{"Accepted?"}
-  askAfford["Ask monthly affordability"]
-  closestTerm["Build closest whole-month term"]
-  firstHigher["First installment may be higher; remaining installments equal"]
-  cadenceGate{"Consumer asks bi-monthly or weekly?"}
-  splitOffer["Split same offer into requested cadence"]
-  askPayday["Ask for payday"]
-  confirmCadenceDates["Confirm installments start one cadence after payday"]
-  contestGate{"Still contests?"}
-  transferAgent([Transfer to human collector])
-${commonCommit}
-
-  startNode --> apiMax --> offerTwo --> twoGate
-  twoGate -->|"Yes"| scheduleDate
-  twoGate -->|"No"| offerFour --> fourGate
-  fourGate -->|"Yes"| scheduleDate
-  fourGate -->|"No"| askAfford --> closestTerm --> firstHigher --> cadenceGate
-  cadenceGate -->|"No"| scheduleDate
-  cadenceGate -->|"Yes"| splitOffer --> askPayday --> confirmCadenceDates --> contestGate
-  contestGate -->|"Accepted"| scheduleDate
-  contestGate -->|"Still contests"| transferAgent
-
-  rule["Supported path: full-balance PPA. Terms start at 1 month and stop at the API max for the selected cadence."]
-
-  class startNode startFinish;
-  class apiMax apiCall;
-  class offerTwo,offerFour,askAfford,closestTerm,firstHigher,splitOffer,askPayday,confirmCadenceDates offerStep;
-  class twoGate,fourGate,cadenceGate,contestGate decision;
-  class transferAgent stopFlow;
-  class rule ruleNote;
-${styleBlock}`,
-      settlementFull: `flowchart TD
-  startNode([Settlement in Full])
-  getLimit["API/context: client_limit_percentage"]
-  startAtFull["Start at 100 percent"]
-  hardshipGate{"Frustration or serious hardship?"}
-  quoteLimit["Quote client limit settlement offer"]
-  limitAccepted{"Client limit offer accepted?"}
-  offerPercent["Offer current settlement percent"]
-  acceptedGate{"Accepted?"}
-  decrement["Calculate next 5 percent step"]
-  limitGate{"Next step at or below client limit?"}
-  transferAgent([Transfer to human collector])
-${commonCommit}
-
-  startNode --> getLimit --> startAtFull --> hardshipGate
-  hardshipGate -->|"Yes"| quoteLimit --> limitAccepted
-  limitAccepted -->|"Yes"| scheduleDate
-  limitAccepted -->|"No"| transferAgent
-  hardshipGate -->|"No"| offerPercent --> acceptedGate
-  acceptedGate -->|"Yes"| scheduleDate
-  acceptedGate -->|"No"| decrement --> limitGate
-  limitGate -->|"No"| offerPercent
-  limitGate -->|"Yes"| quoteLimit
-
-  rule["Supported path: start at 100 percent, step down by 5 percent, and never quote below client_limit_percentage."]
-
-  class startNode startFinish;
-  class getLimit apiCall;
-  class startAtFull,quoteLimit,offerPercent,decrement offerStep;
-  class hardshipGate,limitAccepted,acceptedGate,limitGate decision;
-  class transferAgent stopFlow;
-  class rule ruleNote;
-${styleBlock}`,
-      settlementPpa: `flowchart TD
-  startNode([Settlement in Full with PPA])
-  offerArray["API: settlement offer array"]
-  mostSavings["Offer most savings option, shortest term"]
-  mostGate{"Accepted?"}
-  mediumPlan["Offer medium plan"]
-  mediumGate{"Accepted?"}
-  longestPlan["Offer longest plan"]
-  longestGate{"Accepted?"}
-  monthlyDefault["Default to monthly"]
-  cadenceGate{"Consumer prompts for bi-monthly or weekly?"}
-  splitCadence["Split selected monthly offer into requested cadence"]
-  askPayday["Ask for payday"]
-  confirmCadenceDates["Confirm installments start one cadence after payday"]
-  transferAgent([Transfer to human collector])
-${commonCommit}
-
-  startNode --> offerArray --> mostSavings --> mostGate
-  mostGate -->|"Yes"| monthlyDefault
-  mostGate -->|"No"| mediumPlan --> mediumGate
-  mediumGate -->|"Yes"| monthlyDefault
-  mediumGate -->|"No"| longestPlan --> longestGate
-  longestGate -->|"Yes"| monthlyDefault
-  longestGate -->|"No"| transferAgent
-  monthlyDefault --> cadenceGate
-  cadenceGate -->|"No"| scheduleDate
-  cadenceGate -->|"Yes"| splitCadence --> askPayday --> confirmCadenceDates --> scheduleDate
-
-  rule["Supported path: API gives most savings, medium, and longest options. Offer most savings first; monthly is default after acceptance."]
-
-  class startNode startFinish;
-  class offerArray apiCall;
-  class mostSavings,mediumPlan,longestPlan,monthlyDefault,splitCadence,askPayday,confirmCadenceDates offerStep;
-  class mostGate,mediumGate,longestGate,cadenceGate decision;
-  class transferAgent stopFlow;
-  class rule ruleNote;
-${styleBlock}`,
-      priorOffer: `flowchart TD
-  startNode([Prior Offer Sent])
-  sentOffer["Offer sent by SMS, email, letter, or other channel"]
-  quoteSavings["Quote savings for full payment today"]
-  askCadence["Ask: pay now, monthly, bi-monthly, or weekly"]
-  maxTerm["Use highest term for selected cadence"]
-  paydayGate{"Bi-monthly or weekly selected?"}
-  askPayday["Ask for payday"]
-  confirmCadenceDates["Confirm installments start one cadence after payday"]
-  acceptedGate{"Accepted?"}
-  midOffer["Move to mid offer and mention savings"]
-  lowerOffer["Move to lower offer and mention savings"]
-  transferAgent([Transfer to human collector])
-${commonCommit}
-
-  startNode --> sentOffer --> quoteSavings --> askCadence --> maxTerm --> paydayGate
-  paydayGate -->|"Yes"| askPayday --> confirmCadenceDates --> acceptedGate
-  paydayGate -->|"No"| acceptedGate
-  acceptedGate -->|"Accepted"| scheduleDate
-  acceptedGate -->|"Rejected"| midOffer --> askCadence
-  midOffer -->|"Rejected again"| lowerOffer --> askCadence
-  lowerOffer -->|"Rejected"| transferAgent
-
-  rule["Supported path: communicated offer is presented first, then mid and lower offers with savings called out."]
-
-  class startNode startFinish;
-  class sentOffer,quoteSavings,askCadence,maxTerm,askPayday,confirmCadenceDates,midOffer,lowerOffer offerStep;
-  class paydayGate,acceptedGate decision;
-  class transferAgent stopFlow;
-  class rule ruleNote;
-${styleBlock}`
-    };
-
-    const tabOrder = ["scenarioGuide", "balanceFull", "balanceFullPpa", "settlementFull", "settlementPpa", "priorOffer"];
-    const capabilityTabs = tabOrder.filter((key) => key !== "scenarioGuide");
-
-    const releaseButtons = document.getElementById("releaseButtons");
-    const releaseSummary = document.getElementById("releaseSummary");
-    const scenarioButtons = document.getElementById("scenarioButtons");
-    const kicker = document.getElementById("scenarioKicker");
-    const title = document.getElementById("scenarioTitle");
-    const summary = document.getElementById("scenarioSummary");
-    const pills = document.getElementById("scenarioPills");
-    const talkTrack = document.getElementById("scenarioTalkTrack");
-    const logic = document.getElementById("scenarioLogic");
-    const toast = document.getElementById("toast");
-    let currentRelease = "release4";
-    let currentTab = "scenarioGuide";
-    let currentDiagramSource = diagrams.scenarioGuide;
-
-    function isSupported(tabKey) {
-      if (tabKey === "scenarioGuide") {
-        return true;
-      }
-      return releases[currentRelease].enabledCapabilities.includes(tabKey);
-    }
-
-    function unsupportedContent(tabKey) {
-      const releaseLabel = releases[currentRelease].label;
-      const tabLabel = tabs[tabKey].label;
-      return {
-        kicker: releaseLabel,
-        title: `${tabLabel} - Agent Transfer`,
-        summary: `${tabLabel} is not handled by the bot in ${releaseLabel}. If the consumer requests this path, the agent transfers to a human collector.`,
-        tags: ["Agent Transfer", releaseLabel, "Human collector"],
-        talkTrack: [
-          `In ${releaseLabel}, the bot does not negotiate ${tabLabel}.`,
-          "The tab stays clickable and greyed out so the release-by-release demo can show the unsupported handling.",
-          "When the consumer prompts for this path, the bot explains the limitation and transfers the call to a human collector."
-        ],
-        logic: [
-          "Detect that the requested payment path is outside the selected release scope.",
-          "Do not present negotiation terms for this unsupported capability.",
-          "Transfer to a human collector for handling."
-        ]
-      };
-    }
-
-    function activeContent(tabKey) {
-      return isSupported(tabKey) ? tabs[tabKey].full : unsupportedContent(tabKey);
-    }
-
-    function activeDiagram(tabKey) {
-      return isSupported(tabKey) ? diagrams[tabKey] : "";
-    }
-
-    function renderList(element, items) {
-      element.innerHTML = "";
-      items.forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        element.appendChild(li);
-      });
-    }
-
-    async function renderDiagram() {
-      currentDiagramSource = activeDiagram(currentTab);
-      document.getElementById("diagram").innerHTML = "";
-      if (!currentDiagramSource) {
-        const releaseLabel = releases[currentRelease].label;
-        const tabLabel = tabs[currentTab].label;
-        document.getElementById("diagram").innerHTML = `
-          <div class="diagram-empty">
-            <div>
-              <strong>${tabLabel} routes to agent transfer in ${releaseLabel}</strong>
-              <span>Handling: agent transfer to a human collector when the consumer requests this scenario.</span>
-            </div>
-          </div>`;
-        return;
-      }
-      const renderId = `paymentScenarioDiagram-${currentRelease}-${currentTab}-${Date.now()}`;
-      const { svg } = await mermaid.render(renderId, currentDiagramSource);
-      document.getElementById("diagram").innerHTML = svg;
-    }
-
-    function renderReleaseButtons() {
-      releaseButtons.innerHTML = "";
-      releaseOrder.forEach((key) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "release-button";
-        button.classList.toggle("active", key === currentRelease);
-        button.dataset.release = key;
-        button.textContent = releases[key].label;
-        button.addEventListener("click", () => {
-          currentRelease = key;
-          renderAll();
-        });
-        releaseButtons.appendChild(button);
-      });
-    }
-
-    function renderReleaseSummary() {
-      const release = releases[currentRelease];
-      const supported = capabilityTabs
-        .filter((key) => release.enabledCapabilities.includes(key))
-        .map((key) => tabs[key].label);
-      const unsupported = capabilityTabs
-        .filter((key) => !release.enabledCapabilities.includes(key))
-        .map((key) => tabs[key].label);
-      releaseSummary.innerHTML = `
-        <div class="release-summary-row">
-          <strong>${release.label}</strong>
-          <span>${currentRelease === "release4" ? "Final release with all standard payment scenarios supported." : "Selected phased release behavior."}</span>
-        </div>
-        <div class="release-summary-row">
-          <strong>Bot Handles</strong>
-          <span>${supported.length ? supported.join(", ") : "None"}</span>
-        </div>
-        <div class="release-summary-row">
-          <strong>Agent Transfer</strong>
-          <span>${unsupported.length ? `${unsupported.join(", ")}. Handling: agent transfer.` : "None"}</span>
-        </div>
-        ${release.note ? `
-        <div class="release-summary-row">
-          <strong>Exception</strong>
-          <span>${release.note}</span>
-        </div>` : ""}`;
-    }
-
-    function renderScenarioButtons() {
-      scenarioButtons.innerHTML = "";
-      tabOrder.forEach((key) => {
-        const supported = isSupported(key);
-        const status = key === "scenarioGuide" ? "Guide" : supported ? "Supported" : "Agent Transfer";
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `scenario-button ${supported ? "supported" : "not-supported"}`;
-        button.classList.toggle("active", key === currentTab);
-        button.dataset.scenario = key;
-        button.title = key === "scenarioGuide"
-          ? "Scenario guide is release agnostic"
-          : supported
-          ? `Supported in ${releases[currentRelease].label}`
-          : `Agent transfer in ${releases[currentRelease].label}; transfers to human collector`;
-        button.innerHTML = `
-          <span class="scenario-title-row">
-            <span>
-              <span class="button-kicker">${tabs[key].label}</span>
-              ${tabs[key].full.title}
-            </span>
-            <span class="support-badge ${supported ? "supported" : "not-supported"}">${status}</span>
-          </span>`;
-        button.addEventListener("click", () => {
-          currentTab = key;
-          renderAll();
-        });
-        scenarioButtons.appendChild(button);
-      });
-    }
-
-    function renderScenarioDetails() {
-      const item = activeContent(currentTab);
-      const supported = isSupported(currentTab);
-      kicker.textContent = currentTab === "scenarioGuide"
-        ? "Scenario Guide | Release Agnostic"
-        : `${releases[currentRelease].label} | ${supported ? "Supported" : "Agent Transfer"}`;
-      title.textContent = item.title;
-      summary.textContent = item.summary;
-      pills.innerHTML = "";
-      item.tags.forEach((tag, index) => {
-        const span = document.createElement("span");
-        span.className = `pill ${index === 0 ? (supported ? "success" : "auth") : index === 1 ? "offer" : "lookup"}`;
-        span.textContent = tag;
-        pills.appendChild(span);
-      });
-      renderList(talkTrack, item.talkTrack);
-      renderList(logic, item.logic);
-    }
-
-    function renderAll() {
-      renderReleaseButtons();
-      renderReleaseSummary();
-      renderScenarioButtons();
-      renderScenarioDetails();
-      renderDiagram().catch((error) => {
-        document.getElementById("diagram").textContent = `Unable to render diagram: ${error.message}`;
-      });
-    }
-
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add("visible");
-      window.setTimeout(() => toast.classList.remove("visible"), 1600);
-    }
-
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "loose",
-      theme: "base",
-      themeVariables: {
-        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-        primaryTextColor: "#0f172a",
-        lineColor: "#64748b"
-      }
-    });
-
-    document.getElementById("copyMermaid").addEventListener("click", async () => {
-      if (!currentDiagramSource) {
-        showToast("No Mermaid diagram for unsupported scenario");
-        return;
-      }
-      await navigator.clipboard.writeText(currentDiagramSource);
-      showToast("Current scenario Mermaid copied");
-    });
-
-    document.getElementById("downloadSvg").addEventListener("click", () => {
-      const svg = document.querySelector("#diagram svg");
-      if (!svg) {
-        showToast("No diagram rendered yet");
-        return;
-      }
-      const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "ncb-payment-scenario.svg";
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast("SVG downloaded");
-    });
-
-    document.getElementById("resetScenario").addEventListener("click", () => {
-      currentRelease = "release4";
-      currentTab = "scenarioGuide";
-      renderAll();
-    });
-
-    renderAll();
-  </script>
+  <footer class="shell">Prepared for NCB Management Services Incorporated by Prodigal.</footer>
 </body>
 </html>
