@@ -594,6 +594,27 @@
           ]
         }
       },
+      outOfScope: {
+        label: "Out of Scope",
+        full: {
+          kicker: "Out of Scope",
+          title: "Out of Scope - Callback or Transfer",
+          summary: "Some payment-adjacent requests are outside the bot's authority in this phase. The bot does not attempt them; it routes the consumer to a human via callback or transfer, regardless of release.",
+          tags: ["Release agnostic", "Human collector", "Callback"],
+          talkTrack: [
+            "A few requests look payment-related but are outside what the bot can do on this call.",
+            "These include cancelling an existing plan, settling for less than the approved client limit (settle-for-less or SIF authority is a later phase), and skipping a future installment.",
+            "They also include requests for a written confirmation, receipt, or payoff letter, and any hardship plan longer than the twelve-month maximum.",
+            "In every case the bot does not negotiate or promise the outcome. It explains the limitation and routes the consumer to a human via callback during business hours."
+          ],
+          logic: [
+            "Detect an out-of-scope request before quoting any terms.",
+            "Do not cancel plans, skip installments, settle below client_limit_percentage, or exceed the 12-month plan maximum.",
+            "Do not promise written confirmations, receipts, or payoff letters inline.",
+            "Route to the callback flow or transfer to a human collector; this handling does not change by release."
+          ]
+        }
+      },
       balanceFull: {
         label: "Balance in Full",
         full: {
@@ -938,11 +959,43 @@ ${commonCommit}
   class paydayGate,acceptedGate decision;
   class transferAgent stopFlow;
   class rule ruleNote;
+${styleBlock}`,
+      outOfScope: `flowchart TD
+  startNode([Payment-adjacent request])
+  classify{"Is the request within bot authority?"}
+  inScope["Handle inline: balance, PPA, settlement, prior offer"]
+  cancelPlan["Cancel an existing plan"]
+  settleLess["Settle below the client limit, SIF"]
+  skipInstall["Skip a future installment"]
+  written["Written confirmation, receipt, or payoff letter"]
+  longPlan["Hardship plan longer than 12 months"]
+  noPromise["Do not negotiate or promise the outcome"]
+  routeCallback["Route to callback during business hours or transfer to a human collector"]
+  done([Human collector handles it])
+
+  startNode --> classify
+  classify -->|"In scope"| inScope
+  classify -->|"Cancel a plan"| cancelPlan --> noPromise
+  classify -->|"Settle for less / SIF"| settleLess --> noPromise
+  classify -->|"Skip an installment"| skipInstall --> noPromise
+  classify -->|"Written confirmation"| written --> noPromise
+  classify -->|"Plan over 12 months"| longPlan --> noPromise
+  noPromise --> routeCallback --> done
+
+  rule["Rule: out-of-scope handling is the same in every release. The bot never settles below the client limit, cancels plans, skips installments, or issues written confirmations."]
+
+  class startNode,done startFinish;
+  class inScope offerStep;
+  class cancelPlan,settleLess,skipInstall,written,longPlan offerStep;
+  class noPromise,routeCallback stopFlow;
+  class classify decision;
+  class rule ruleNote;
 ${styleBlock}`
     };
 
-    const tabOrder = ["scenarioGuide", "balanceFull", "balanceFullPpa", "settlementFull", "settlementPpa", "priorOffer"];
-    const capabilityTabs = tabOrder.filter((key) => key !== "scenarioGuide");
+    const tabOrder = ["scenarioGuide", "balanceFull", "balanceFullPpa", "settlementFull", "settlementPpa", "priorOffer", "outOfScope"];
+    const releaseAgnosticTabs = ["scenarioGuide", "outOfScope"];
+    const capabilityTabs = tabOrder.filter((key) => !releaseAgnosticTabs.includes(key));
 
     const releaseButtons = document.getElementById("releaseButtons");
     const releaseSummary = document.getElementById("releaseSummary");
@@ -959,7 +1012,7 @@ ${styleBlock}`
     let currentDiagramSource = diagrams.scenarioGuide;
 
     function isSupported(tabKey) {
-      if (tabKey === "scenarioGuide") {
+      if (releaseAgnosticTabs.includes(tabKey)) {
         return true;
       }
       return releases[currentRelease].enabledCapabilities.includes(tabKey);
@@ -1072,14 +1125,17 @@ ${styleBlock}`
       scenarioButtons.innerHTML = "";
       tabOrder.forEach((key) => {
         const supported = isSupported(key);
-        const status = key === "scenarioGuide" ? "Guide" : supported ? "Supported" : "Agent Transfer";
+        const visualSupported = key === "outOfScope" ? false : supported;
+        const status = key === "scenarioGuide" ? "Guide" : key === "outOfScope" ? "Callback" : supported ? "Supported" : "Agent Transfer";
         const button = document.createElement("button");
         button.type = "button";
-        button.className = `scenario-button ${supported ? "supported" : "not-supported"}`;
+        button.className = `scenario-button ${visualSupported ? "supported" : "not-supported"}`;
         button.classList.toggle("active", key === currentTab);
         button.dataset.scenario = key;
         button.title = key === "scenarioGuide"
           ? "Scenario guide is release agnostic"
+          : key === "outOfScope"
+          ? "Out of scope is release agnostic; always routes to a human callback or transfer"
           : supported
           ? `Supported in ${releases[currentRelease].label}`
           : `Agent transfer in ${releases[currentRelease].label}; transfers to human collector`;
@@ -1089,7 +1145,7 @@ ${styleBlock}`
               <span class="button-kicker">${tabs[key].label}</span>
               ${tabs[key].full.title}
             </span>
-            <span class="support-badge ${supported ? "supported" : "not-supported"}">${status}</span>
+            <span class="support-badge ${visualSupported ? "supported" : "not-supported"}">${status}</span>
           </span>`;
         button.addEventListener("click", () => {
           currentTab = key;
@@ -1101,9 +1157,11 @@ ${styleBlock}`
 
     function renderScenarioDetails() {
       const item = activeContent(currentTab);
-      const supported = isSupported(currentTab);
+      const supported = isSupported(currentTab) && currentTab !== "outOfScope";
       kicker.textContent = currentTab === "scenarioGuide"
         ? "Scenario Guide | Release Agnostic"
+        : currentTab === "outOfScope"
+        ? "Out of Scope | Release Agnostic"
         : `${releases[currentRelease].label} | ${supported ? "Supported" : "Agent Transfer"}`;
       title.textContent = item.title;
       summary.textContent = item.summary;

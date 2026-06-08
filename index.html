@@ -227,7 +227,7 @@
   <main class="shell">
     <section class="hero">
       <h1>NCB Voice AI Workflow Walkthroughs</h1>
-      <p>Interactive, client-ready walkthroughs for authentication and payment workflow behavior across the NCB voice AI rollout.</p>
+      <p>Interactive, client-ready walkthroughs for authentication, payment negotiation, account maintenance, and global auxiliary handling across the NCB voice AI rollout.</p>
     </section>
 
     <section class="cards" aria-label="Workflow walkthrough links">
@@ -245,14 +245,38 @@
 
       <a class="card" href="payment-workflows/index.html">
         <span class="tag">Payment Negotiation</span>
-        <h2>Payment Release Workflow</h2>
+        <h2>Payment Negotiation Workflow</h2>
         <p>Release-based payment workflow walkthrough showing what the bot handles directly and what routes to agent transfer.</p>
         <ul class="bullets">
           <li>Release 1 through Release 4 capabilities</li>
           <li>Balance, settlement, PPA, and prior-offer paths</li>
           <li>Scenario Guide with default and consumer-triggered routing</li>
         </ul>
-        <span class="open-link">Open Payment Workflow -></span>
+        <span class="open-link">Open Payment Negotiation Workflow -></span>
+      </a>
+
+      <a class="card" href="account-maintenance/index.html">
+        <span class="tag">Account Maintenance</span>
+        <h2>Account Maintenance Workflow</h2>
+        <p>Walkthrough for editing and viewing an existing plan, covering the five maintenance sub-flows on ACTIVE arrangements.</p>
+        <ul class="bullets">
+          <li>Change a payment date or a payment method</li>
+          <li>Whole-plan method change and combined date plus method edits</li>
+          <li>Read-only plan and upcoming payments view</li>
+        </ul>
+        <span class="open-link">Open Account Maintenance Workflow -></span>
+      </a>
+
+      <a class="card" href="aux-intents/index.html">
+        <span class="tag">Aux Intents</span>
+        <h2>Aux Intents and Global Handling</h2>
+        <p>Walkthrough for the global behaviors that override any state, from privacy and compliance stops to out-of-scope requests.</p>
+        <ul class="bullets">
+          <li>Disputes, bankruptcy, cease and desist, attorney, deceased</li>
+          <li>Callback scheduling and contact-update routing</li>
+          <li>Third-party privacy, AI or fraud, and no live transfer</li>
+        </ul>
+        <span class="open-link">Open Aux Intents Workflow -></span>
       </a>
     </section>
   </main>

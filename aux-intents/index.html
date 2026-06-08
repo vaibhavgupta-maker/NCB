@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NCB Aux Intents and Global Handling</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 32px 40px 24px;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: white;
+    }
+
+    header p {
+      max-width: 920px;
+      margin: 8px 0 0;
+      color: #dbeafe;
+      font-size: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 20px;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .scenario-buttons {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    button.scenario-button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 12px 14px;
+      text-align: left;
+      font: inherit;
+      transition: 160ms ease;
+    }
+
+    button.scenario-button:hover {
+      border-color: var(--blue);
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+
+    button.scenario-button.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 4px 0 0 var(--blue);
+    }
+
+    .button-kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+
+    .details {
+      padding: 20px;
+    }
+
+    .details p {
+      margin: 0 0 14px;
+      color: #334155;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: var(--gray-soft);
+    }
+
+    .pill.lookup {
+      background: var(--purple-soft);
+      color: #4c1d95;
+      border-color: #c4b5fd;
+    }
+
+    .pill.auth {
+      background: var(--amber-soft);
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+
+    .pill.stop {
+      background: var(--red-soft);
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    .pill.success {
+      background: var(--green-soft);
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    ul {
+      margin: 8px 0 18px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 7px 0;
+      color: #334155;
+    }
+
+    .rule-card {
+      margin: 16px 20px 20px;
+      padding: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 14px;
+      color: #78350f;
+      font-size: 14px;
+    }
+
+    .diagram-panel {
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .toolbar strong {
+      font-size: 14px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .toolbar button:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .diagram-wrap {
+      padding: 18px;
+      overflow: auto;
+      min-height: 680px;
+      background: white;
+    }
+
+    #diagram {
+      min-width: 980px;
+    }
+
+    #diagram svg {
+      max-width: none;
+      width: 100%;
+      height: auto;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 160ms ease;
+      pointer-events: none;
+      font-size: 14px;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1050px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+
+    .client-brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .client-brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .client-brand-logo {
+      display: block;
+      max-height: 54px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .client-brand-logo.ncb-logo {
+      max-height: 64px;
+    }
+
+    .client-brand-caption {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .client-brand-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .client-brand-caption {
+        white-space: normal;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="client-brand-bar">
+      <div class="client-brand-logos">
+        <img class="client-brand-logo ncb-logo" src="../assets/ncb-logo.png" alt="NCB Management Services Incorporated logo" />
+        <img class="client-brand-logo" src="../assets/prodigal-logo.png" alt="Prodigal logo" />
+      </div>
+      <span class="client-brand-caption">Client Workflow Walkthrough</span>
+    </div>
+    <h1>NCB Aux Intents and Global Handling</h1>
+    <p>Interactive client walkthrough for the global behaviors that can interrupt any state. Use the scenario buttons to explain how the after-hours agent handles privacy, compliance stops, and out-of-scope requests, many of which are processed immediately even before verification.</p>
+  </header>
+
+  <main>
+    <aside class="panel sidebar">
+      <div class="scenario-buttons" id="scenarioButtons"></div>
+      <section class="details">
+        <span class="button-kicker" id="scenarioKicker">Scenario</span>
+        <h2 id="scenarioTitle"></h2>
+        <p id="scenarioSummary"></p>
+        <div class="pill-row" id="scenarioPills"></div>
+        <h3>Talk Track</h3>
+        <ul id="scenarioTalkTrack"></ul>
+        <h3>Agent Logic</h3>
+        <ul id="scenarioLogic"></ul>
+      </section>
+      <div class="rule-card">
+        <strong>Core aux rule:</strong> these intents override the active state. Protect privacy first, never confirm an account to the wrong party, and remember that after hours there is no live transfer. Some intents, such as cease and desist, bankruptcy, attorney, and deceased, forbid any callback offer.
+      </div>
+    </aside>
+
+    <section class="panel diagram-panel">
+      <div class="toolbar">
+        <strong>Workflow Diagram</strong>
+        <div class="toolbar-actions">
+          <button type="button" id="copyMermaid">Copy Mermaid</button>
+          <button type="button" id="downloadSvg">Download SVG</button>
+          <button type="button" id="resetScenario">Reset View</button>
+        </div>
+      </div>
+      <div class="diagram-wrap">
+        <div id="diagram"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+
+    const scenarios = {
+      overview: {
+        kicker: "Overview",
+        title: "Global handling that overrides any state",
+        summary: "Auxiliary intents can fire at any point in the call. The agent handles them immediately, protects privacy, and follows the specific compliance rule, which sometimes forbids a callback.",
+        tags: ["Any state", "Privacy first", "No live transfer"],
+        talkTrack: [
+          "These are the cross-cutting behaviors, not part of a single state.",
+          "Several are processed immediately even if the caller is not yet verified, like disputes, bankruptcy, and do-not-contact.",
+          "Because this is an after-hours agent, there is no human to transfer to; the agent offers business hours where that is allowed.",
+          "A few intents forbid any callback at all under FDCPA, such as cease and desist, attorney representation, bankruptcy, and deceased."
+        ],
+        logic: [
+          "Detect a global signal, then branch out of the normal flow.",
+          "Never confirm an account exists to anyone but the verified account holder.",
+          "Resolve inline where possible; otherwise state business hours and offer a callback only where permitted.",
+          "Note the account, and end or resume depending on the specific rule."
+        ]
+      },
+      callback: {
+        kicker: "Callback",
+        title: "Schedule a callback within business hours",
+        summary: "The landing point for anything the agent cannot resolve after hours. It collects a specific date and time, validates it against business hours, and books the reminder.",
+        tags: ["Specific date and time", "Business-hours only", "Validate then book"],
+        talkTrack: [
+          "Callbacks are the path for things the after-hours agent cannot do: disputes, written confirmations, attorney coordination, settlement or SIF discussions, out-of-scope queries, or whenever the consumer simply wants a human.",
+          "The agent frames the callback naturally and asks when would be a good time to reach them.",
+          "It needs a concrete date and a specific time with hour, minute, and morning or afternoon. Vague answers like whenever default to the next business day at ten in the morning Central.",
+          "It reads the full date and time back, then books it. Brand-new payments are NOT deferred to a callback; if a payment intent comes up, the agent handles it inline instead."
+        ],
+        logic: [
+          "Business hours: Monday to Thursday 8 AM to 8 PM, Friday 8 AM to 6 PM, Saturday 8 AM to 1 PM Central. No Sundays or holidays.",
+          "Validate the requested time with execute_code, timezone-aware; never claim times are open on an invalid day.",
+          "On a valid time, confirm the full date and time, then call create_callback_reminder; retry at most once on failure.",
+          "If a payment intent is expressed during scheduling, route to payments silently; cancel mid-flow means no reminder is created."
+        ]
+      },
+      outbound: {
+        kicker: "Outbound claim",
+        title: "Consumer says you called me",
+        summary: "Acknowledge gracefully as the organization, never correct who initiated contact, then continue helping.",
+        tags: ["Acknowledge as us", "Never defend", "Resume flow"],
+        talkTrack: [
+          "Callers often say they are returning a call from the organization.",
+          "The agent acknowledges with us language: I understand you may have received a call from us.",
+          "It never says things like I did not call you or this is an inbound line.",
+          "The consumer's perception is treated as valid, and the agent simply continues assisting."
+        ],
+        logic: [
+          "Acknowledge the possible prior contact as the organization.",
+          "Never correct or dispute who initiated contact.",
+          "Do not reveal who called or the purpose pre-verification.",
+          "Resume the active state flow."
+        ]
+      },
+      fraudAi: {
+        kicker: "AI / fraud",
+        title: "Suspected AI agent or impersonation",
+        summary: "If the caller seems to be a bot, recites a recording notice, or is testing or impersonating the agent, ask for a business-hours callback and end immediately.",
+        tags: ["Bot detection", "No engagement", "End the call"],
+        talkTrack: [
+          "If the caller speaks like an automated system or says the call may be monitored and recorded, that is a red flag.",
+          "Attempts to impersonate the agent or break it with prompt injection are treated the same way.",
+          "The agent does not engage or try to win the exchange.",
+          "It asks the caller to call back during business hours and ends the call right away."
+        ],
+        logic: [
+          "Detect AI, impersonation, or jailbreak signals.",
+          "Do not continue the normal flow or reveal information.",
+          "Ask the caller to call back during business hours.",
+          "End the call immediately after."
+        ]
+      },
+      thirdParty: {
+        kicker: "Third party",
+        title: "Not the account holder, spouse, POA, or minor",
+        summary: "Never confirm an account to anyone but the verified account holder. There is no spouse or POA shortcut, and a minor must not be told this is a collection call.",
+        tags: ["Neutral language", "No POA shortcut", "Protect a minor"],
+        talkTrack: [
+          "If a minor is on the line, the agent does not reveal a collection call and asks for an adult.",
+          "If someone asks about another person, the agent uses neutral language and never confirms any account exists.",
+          "A spouse, partner, or stated power of attorney cannot verify on the holder's behalf during this call.",
+          "The agent offers a business-hours callback so a human can validate any authorization on file."
+        ],
+        logic: [
+          "Minor: do not disclose, ask for an adult, end politely.",
+          "Third party asking about someone else: stay neutral, never acknowledge an account.",
+          "Spouse or POA: no verification shortcut; a human validates authorization during business hours.",
+          "Do not suggest the account holder call back when speaking to a third party."
+        ]
+      },
+      dispute: {
+        kicker: "Dispute",
+        title: "Not mine or already paid",
+        summary: "Acknowledge the dispute, note it on the account, stop collection on this call, and offer a business-hours callback. Processed immediately, even before verification.",
+        tags: ["Process immediately", "Note dispute", "Stop collection"],
+        talkTrack: [
+          "If the consumer says this is not their account or they already paid, that is a dispute.",
+          "The agent acknowledges it and explains a human will follow up during business hours.",
+          "It does not continue collection on this call.",
+          "The dispute is noted on the account and a callback is offered."
+        ],
+        logic: [
+          "Recognize already-paid or wrong-account as a dispute.",
+          "Acknowledge and note the dispute on the account.",
+          "Stop collection on this call.",
+          "Offer a business-hours callback for human follow-up."
+        ]
+      },
+      bankruptcy: {
+        kicker: "Bankruptcy",
+        title: "Consumer mentions a bankruptcy filing",
+        summary: "Stop collection at once. Capture only the filing date and chapter for notes, read them back, and end politely with no callback.",
+        tags: ["Stop at once", "Date and chapter only", "No callback"],
+        talkTrack: [
+          "Any mention of a bankruptcy filing halts the conversation immediately.",
+          "The agent captures just two things for notes: the date filed and the chapter.",
+          "It reads both back to confirm and asks nothing else, never discussing the balance.",
+          "It tells the consumer the bankruptcy team will review, then ends politely without offering a callback."
+        ],
+        logic: [
+          "Stop collection immediately on any bankruptcy mention.",
+          "Capture filing date and chapter for note-taking only; read back to confirm.",
+          "Do not discuss the balance or ask other questions.",
+          "End politely; the bankruptcy team routes internally, so no callback is offered."
+        ]
+      },
+      ceaseStop: {
+        kicker: "Stop contact",
+        title: "Cease and desist, do not contact, stop calling",
+        summary: "Honor the request and note suppression. A cease and desist gets no callback under FDCPA; do-not-contact and stop-calling point to business hours or a human note without revealing purpose.",
+        tags: ["Honor request", "Note suppression", "Cease: no callback"],
+        talkTrack: [
+          "The exact handling depends on what the consumer asks for.",
+          "For a cease and desist, the agent confirms no further communication on this matter and never offers a callback.",
+          "For do-not-contact, it asks the consumer to call back during business hours.",
+          "For stop calling or take me off the list, it accepts the request and says a human will be notified, without revealing who is calling or why."
+        ],
+        logic: [
+          "Cease and desist: confirm no further communication, note suppression, end with no callback.",
+          "Do not contact: ask them to call back during business hours.",
+          "Stop calling or take off list: accept and tell them a human will be notified.",
+          "A cease-and-desist callback would itself be prohibited communication under FDCPA 1692c(c)."
+        ]
+      },
+      attorney: {
+        kicker: "Attorney",
+        title: "Consumer is represented by an attorney",
+        summary: "Capture the attorney's name and phone for notes, tell the consumer NCB will contact the attorney, and end politely with no consumer callback.",
+        tags: ["Capture attorney", "No consumer callback", "Stop discussion"],
+        talkTrack: [
+          "If the consumer says they have a lawyer for this matter, NCB must communicate with the attorney, not the consumer.",
+          "The agent captures the attorney's name and direct phone number for notes and reads them back.",
+          "It explains NCB will contact the attorney going forward.",
+          "It does not continue any collection discussion and does not offer the consumer a callback."
+        ],
+        logic: [
+          "Capture attorney name and direct phone; read back to confirm.",
+          "Explain NCB will contact the attorney going forward.",
+          "Do not continue collection discussion with the consumer.",
+          "Under FDCPA 1692c(a)(2), communicate with the attorney, not the consumer."
+        ]
+      },
+      deceased: {
+        kicker: "Deceased",
+        title: "Caller reports the account holder has passed",
+        summary: "Offer condolences, disclose nothing, capture the date of death and estate contact for notes, then suppress further contact and end with no collection callback.",
+        tags: ["Condolences", "No disclosure", "Estate follow-up"],
+        talkTrack: [
+          "When a family member or friend reports a death, the agent offers condolences first.",
+          "It does not disclose the debt or any account detail to the caller.",
+          "It captures the date of death for notes, reading it back, and asks if there is an estate representative or attorney.",
+          "It tells the caller the estate team will reach out, suppresses further consumer contact, and ends politely."
+        ],
+        logic: [
+          "Offer condolences; do not disclose the debt or any account detail.",
+          "Capture date of death for notes; read back to confirm.",
+          "If there is an estate representative or attorney, capture their name and phone.",
+          "Note the account to suppress contact; do not offer a collection-related callback."
+        ]
+      },
+      language: {
+        kicker: "Language",
+        title: "Spanish or any non-English caller",
+        summary: "The agent supports English only. It explains this, offers a business-hours follow-up from a representative who can assist, and ends politely.",
+        tags: ["English only", "Business-hours follow-up", "End politely"],
+        talkTrack: [
+          "If the consumer speaks Spanish or another non-English language, the agent supports English only.",
+          "It briefly lets the caller know a representative who can assist will follow up during business hours.",
+          "It offers to schedule that follow-up callback.",
+          "Then it ends the call politely."
+        ],
+        logic: [
+          "State that only English is supported.",
+          "Explain a representative who can assist will follow up during business hours.",
+          "Offer to schedule the follow-up callback.",
+          "End the call politely."
+        ]
+      },
+      abusiveSilence: {
+        kicker: "Abuse / silence",
+        title: "Abusive caller or no response",
+        summary: "Stay calm and never escalate. One polite warning for abuse, two prompts for silence, then end politely and note the account.",
+        tags: ["Stay calm", "One warning", "Two silence prompts"],
+        talkTrack: [
+          "If the caller becomes abusive, the agent stays professional and does not mirror the language.",
+          "It issues exactly one polite warning, and if abuse continues it ends the call and notes the account.",
+          "If the caller goes silent, the agent asks are you still there up to two times.",
+          "After the second prompt with no response, it ends politely and notes no response."
+        ],
+        logic: [
+          "Abusive: stay calm, do not escalate, issue one warning only.",
+          "If abuse continues after the warning, end politely and note the account.",
+          "Silent: prompt up to two times, then end and note no response.",
+          "Never issue more than one warning or more than two prompts."
+        ]
+      },
+      updateContact: {
+        kicker: "Contact info",
+        title: "Update contact or account details",
+        summary: "The after-hours agent does not change contact or account details on the call. It routes the request to a business-hours callback or a next-working-day agent follow-up.",
+        tags: ["Not changed on call", "Business-hours route", "Agent follow-up"],
+        talkTrack: [
+          "Consumers sometimes ask to update a phone number, address, email, or other account details.",
+          "The after-hours agent cannot make those changes itself.",
+          "It explains the update will be handled during business hours, and offers to have an agent follow up the next working day.",
+          "It does not collect or confirm the new details as if they were saved."
+        ],
+        logic: [
+          "Recognize a request to update contact or account details.",
+          "Do not modify any details on this call.",
+          "Ask the consumer to call back during business hours, or offer a next-working-day agent follow-up.",
+          "Keep it neutral; never imply the change has been applied."
+        ]
+      },
+      otherRequests: {
+        kicker: "Other requests",
+        title: "Human, another account, why verify, abilities",
+        summary: "After hours there is no live transfer. Resolve what is possible inline, otherwise state the business hours and offer a callback where allowed.",
+        tags: ["No live transfer", "Resolve or callback", "State hours"],
+        talkTrack: [
+          "If the consumer wants a human, the agent notes none is available after hours and asks what they need, helping inline when it can.",
+          "Only one account can be handled per call, so for another account it asks the consumer to call again.",
+          "If the consumer wants to end the call, the agent ends it politely.",
+          "If asked why verification is needed, it gives the short privacy explanation and resumes; ability questions are limited before the Miranda disclosure and more open after it."
+        ],
+        logic: [
+          "Speak to a human: state none is available after hours; resolve inline or offer business hours.",
+          "Resolve another account: only one account per call; ask them to call again.",
+          "User asks to end the call: end politely.",
+          "Why verify: give the short privacy explanation, then resume the verification step."
+        ]
+      }
+    };
+
+    const scenarioButtons = document.getElementById("scenarioButtons");
+    const kicker = document.getElementById("scenarioKicker");
+    const title = document.getElementById("scenarioTitle");
+    const summary = document.getElementById("scenarioSummary");
+    const pills = document.getElementById("scenarioPills");
+    const talkTrack = document.getElementById("scenarioTalkTrack");
+    const logic = document.getElementById("scenarioLogic");
+    const toast = document.getElementById("toast");
+    const styleBlock = `
+  classDef startFinish fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#052e16;
+  classDef lookup fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+  classDef scenario fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+  classDef authStep fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03;
+  classDef decision fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#422006;
+  classDef stopFlow fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+  classDef ruleNote fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,color:#111827;`;
+
+    const diagrams = {
+      overview: `flowchart TD
+  startNode([Any point in the call])
+  trigger{"Consumer signals a global intent?"}
+  continue["Continue the active state flow"]
+  immediate["Handle immediately, even if unverified"]
+  privacy["Protect privacy; never confirm an account to the wrong party"]
+  noTransfer["After hours: no live transfer; offer business hours where allowed"]
+  noteEnd["Note the account; end or resume per the specific rule"]
+
+  startNode --> trigger
+  trigger -->|"No"| continue
+  trigger -->|"Yes"| immediate --> privacy --> noTransfer --> noteEnd
+
+  rule["Rule: certain intents are processed immediately and override the normal flow. Some forbid any callback under FDCPA."]
+
+  class startNode startFinish;
+  class continue,immediate,privacy,noTransfer scenario;
+  class trigger decision;
+  class noteEnd stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      callback: `flowchart TD
+  startNode([Agent cannot resolve this after hours])
+  reasons["Disputes, written confirmation, attorney, settlement or SIF, out-of-scope, or wants a human"]
+  frame["Frame the callback and ask for a good time"]
+  collect["Collect a specific date and a specific time, with morning or afternoon"]
+  vagueGate{"Answer is vague, like whenever?"}
+  proposeDefault["Propose next business day at ten in the morning Central"]
+  validate["execute_code: validate against business hours, timezone-aware"]
+  validGate{"Time valid?"}
+  explain["Explain the specific reason; suggest a concrete alternative"]
+  paymentGate{"Payment intent expressed?"}
+  routePay["Route to payments silently; payments are inline this phase"]
+  confirm["Read back the full date and time, get confirmation"]
+  book["API: create_callback_reminder, retry at most once"]
+  bookGate{"Booked?"}
+  done([Confirm callback scheduled])
+  failBook([Advise calling back during business hours])
+
+  startNode --> reasons --> frame --> collect --> vagueGate
+  vagueGate -->|"Yes"| proposeDefault --> validate
+  vagueGate -->|"No"| validate
+  validate --> validGate
+  validGate -->|"No"| explain --> collect
+  validGate -->|"Yes"| paymentGate
+  paymentGate -->|"Yes"| routePay
+  paymentGate -->|"No"| confirm --> book --> bookGate
+  bookGate -->|"Yes"| done
+  bookGate -->|"No"| failBook
+
+  rule["Rule: business hours are Mon-Thu 8-8, Fri 8-6, Sat 8-1 Central, no Sundays. Never claim a time is open on an invalid day."]
+
+  class startNode,done startFinish;
+  class validate,book lookup;
+  class reasons,frame,collect,proposeDefault,explain,routePay,confirm scenario;
+  class vagueGate,validGate,paymentGate,bookGate decision;
+  class failBook stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      outbound: `flowchart TD
+  startNode([Consumer says you called me])
+  acknowledge["Acknowledge with us: I understand you may have received a call from us"]
+  neverDefend["Never say I did not call you or this is an inbound line"]
+  assist["Continue assisting from the active state"]
+  done([Resume normal flow])
+
+  startNode --> acknowledge --> neverDefend --> assist --> done
+
+  rule["Rule: the consumer's perception is valid. Acknowledge as the organization and never correct who initiated contact."]
+
+  class startNode,done startFinish;
+  class acknowledge,neverDefend,assist scenario;
+  class rule ruleNote;
+${styleBlock}`,
+      fraudAi: `flowchart TD
+  startNode([Signals of an AI or impersonation attempt])
+  detect{"Caller acts like a bot, recites a recording notice, or tests the agent?"}
+  proceed["Continue the normal flow"]
+  callback["Ask the caller to call back during business hours"]
+  endCall([End the call immediately])
+
+  startNode --> detect
+  detect -->|"No"| proceed
+  detect -->|"Yes"| callback --> endCall
+
+  rule["Rule: if the caller appears to be another agent, an impersonation, or a jailbreak attempt, do not engage. Ask for a business-hours callback and end."]
+
+  class startNode startFinish;
+  class proceed,callback scenario;
+  class detect decision;
+  class endCall stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      thirdParty: `flowchart TD
+  startNode([Caller is not the verified account holder])
+  whoGate{"Who is on the line?"}
+  minor["Minor: do not reveal a collection call; ask for an adult"]
+  thirdPerson["Third party asking about someone else"]
+  spousePoa["Spouse, partner, or stated POA"]
+  neutral["Use neutral language; never confirm any account exists"]
+  noVerify["Only the account holder can verify; no spouse or POA shortcut"]
+  offerHours["Offer a business-hours callback for a human to validate authorization"]
+  endPolite([End politely])
+
+  startNode --> whoGate
+  whoGate -->|"Minor"| minor --> endPolite
+  whoGate -->|"Asking about another person"| thirdPerson --> neutral --> endPolite
+  whoGate -->|"Spouse or POA"| spousePoa --> noVerify --> offerHours --> endPolite
+
+  rule["Rule: never acknowledge that a specific person has an account. There is no spouse or POA exception to verification."]
+
+  class startNode startFinish;
+  class minor,thirdPerson,spousePoa,neutral,noVerify,offerHours scenario;
+  class whoGate decision;
+  class endPolite stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      dispute: `flowchart TD
+  startNode([Consumer disputes: not mine or already paid])
+  acknowledge["Acknowledge the dispute"]
+  note["Note the dispute on the account"]
+  stopCollection["Stop collection on this call"]
+  callback["Explain a human will follow up; offer a business-hours callback"]
+  done([Do not continue collection])
+
+  startNode --> acknowledge --> note --> stopCollection --> callback --> done
+
+  rule["Rule: disputes including already-paid or wrong-account are processed immediately, even before verification, and pause collection."]
+
+  class startNode startFinish;
+  class acknowledge,note,stopCollection,callback scenario;
+  class done stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      bankruptcy: `flowchart TD
+  startNode([Consumer mentions a bankruptcy filing])
+  stop["Stop collection immediately"]
+  capture["Capture filing date and chapter, for notes only"]
+  readback["Read both back to confirm"]
+  noOther["Ask nothing else; do not discuss the balance"]
+  inform["Tell consumer the bankruptcy team will review"]
+  endCall([End politely, no callback offered])
+
+  startNode --> stop --> capture --> readback --> noOther --> inform --> endCall
+
+  rule["Rule: on any bankruptcy mention, halt the flow at once. Capture only date and chapter. Do not offer a callback; the bankruptcy team routes internally."]
+
+  class startNode startFinish;
+  class stop,noOther,inform scenario;
+  class capture,readback authStep;
+  class endCall stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      ceaseStop: `flowchart TD
+  startNode([Consumer asks to stop contact])
+  typeGate{"What did they ask for?"}
+  cease["Cease and desist: confirm no further communication on this matter"]
+  doNotContact["Do not contact: ask them to call back during business hours"]
+  stopList["Stop calling or take off list: accept and tell them a human will be notified"]
+  noteCease["Note the suppression on the account"]
+  endNoCallback(["End; no callback under FDCPA 1692c(c)"])
+  endNeutral([End without revealing purpose])
+
+  startNode --> typeGate
+  typeGate -->|"Cease and desist"| cease --> noteCease --> endNoCallback
+  typeGate -->|"Do not contact"| doNotContact --> endNeutral
+  typeGate -->|"Stop calling / take off list"| stopList --> endNeutral
+
+  rule["Rule: for a cease and desist, never offer a callback. A follow-up call would itself be prohibited further communication."]
+
+  class startNode startFinish;
+  class cease,doNotContact,stopList,noteCease scenario;
+  class typeGate decision;
+  class endNoCallback,endNeutral stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      attorney: `flowchart TD
+  startNode([Consumer says an attorney represents them])
+  capture["Capture attorney name and direct phone, for notes"]
+  readback["Read both back to confirm"]
+  inform["Explain NCB will contact the attorney going forward"]
+  note["Note the account"]
+  noDiscuss["Do not continue any collection discussion"]
+  endCall([End politely, no consumer callback])
+
+  startNode --> capture --> readback --> inform --> note --> noDiscuss --> endCall
+
+  rule["Rule: under FDCPA 1692c(a)(2), once an attorney is named NCB communicates with the attorney, not the consumer."]
+
+  class startNode startFinish;
+  class inform,note,noDiscuss scenario;
+  class capture,readback authStep;
+  class endCall stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      deceased: `flowchart TD
+  startNode([Caller reports the account holder is deceased])
+  condolences["Offer condolences"]
+  noDisclose["Do not disclose the debt or any account detail"]
+  captureDeath["Capture date of death for notes; read back to confirm"]
+  estateGate{"Estate representative or attorney handling the estate?"}
+  captureEstate["Capture their name and phone for the estate team"]
+  inform["Tell the caller the estate team will reach out"]
+  suppress["Note the account to suppress further consumer contact"]
+  endCall([End politely, no collection callback])
+
+  startNode --> condolences --> noDisclose --> captureDeath --> estateGate
+  estateGate -->|"Yes"| captureEstate --> inform
+  estateGate -->|"No"| inform
+  inform --> suppress --> endCall
+
+  rule["Rule: never disclose the debt to the caller. Capture estate contact for follow-up; do not offer a collection-related callback."]
+
+  class startNode startFinish;
+  class condolences,noDisclose,inform,suppress scenario;
+  class captureDeath,captureEstate authStep;
+  class estateGate decision;
+  class endCall stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      language: `flowchart TD
+  startNode([Consumer speaks Spanish or another non-English language])
+  inform["Explain only English is supported"]
+  followup["A representative who can assist will follow up during business hours"]
+  offer["Offer to schedule that follow-up callback"]
+  endCall([End politely])
+
+  startNode --> inform --> followup --> offer --> endCall
+
+  rule["Rule: the agent supports English only. Hand off to a business-hours representative for language support."]
+
+  class startNode startFinish;
+  class inform,followup,offer scenario;
+  class endCall stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      abusiveSilence: `flowchart TD
+  startNode([Caller becomes abusive, or goes silent])
+  branchGate{"Abusive or silent?"}
+  warn["Abusive: stay calm, issue ONE polite warning"]
+  contGate{"Abuse continues after the warning?"}
+  endAbuse(["End politely; note the account"])
+  prompt["Silent: prompt are you still there, up to TWO times"]
+  respGate{"Response after the second prompt?"}
+  resume([Resume the active flow])
+  endSilent(["End politely; note no response"])
+
+  startNode --> branchGate
+  branchGate -->|"Abusive"| warn --> contGate
+  contGate -->|"Yes"| endAbuse
+  contGate -->|"No"| resume
+  branchGate -->|"Silent"| prompt --> respGate
+  respGate -->|"No"| endSilent
+  respGate -->|"Yes"| resume
+
+  rule["Rule: never mirror or escalate. One warning for abuse, two prompts for silence, then end politely and note the account."]
+
+  class startNode,resume startFinish;
+  class warn,prompt scenario;
+  class branchGate,contGate,respGate decision;
+  class endAbuse,endSilent stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      updateContact: `flowchart TD
+  startNode([Consumer wants to update contact or account details])
+  recognize["Recognize: new phone, address, email, or other detail"]
+  noChange["Do not change any details on this call"]
+  route["Ask to call back during business hours, or offer a next-working-day agent follow-up"]
+  neutral["Never imply the change has been applied"]
+  done([End or resume politely])
+
+  startNode --> recognize --> noChange --> route --> neutral --> done
+
+  rule["Rule: the after-hours agent does not update contact or account details. The change is handled by a human during business hours."]
+
+  class startNode,done startFinish;
+  class recognize,noChange,route,neutral scenario;
+  class rule ruleNote;
+${styleBlock}`,
+      otherRequests: `flowchart TD
+  startNode([Other auxiliary requests])
+  kindGate{"What is the request?"}
+  human["Wants a human: state none is available after hours, ask what they need"]
+  humanGate{"Resolvable by the agent now?"}
+  resolve["Help inline"]
+  hours["Offer business-hours callback and state the hours"]
+  another["Another account: only one account per call; ask to call again"]
+  endReq["Wants to end the call: end politely"]
+  whyVerify["Why verify: give the short privacy explanation, then resume"]
+  abilities["Questions about abilities: limited pre-Miranda; helpful post-Miranda"]
+  done([Resume or end politely])
+
+  startNode --> kindGate
+  kindGate -->|"Speak to a human"| human --> humanGate
+  humanGate -->|"Yes"| resolve --> done
+  humanGate -->|"No"| hours --> done
+  kindGate -->|"Resolve another account"| another --> done
+  kindGate -->|"End the call"| endReq --> done
+  kindGate -->|"Why verify?"| whyVerify --> done
+  kindGate -->|"What can you do?"| abilities --> done
+
+  rule["Rule: after-hours has no live transfer. Resolve what is possible, otherwise state the business hours and offer a callback where permitted."]
+
+  class startNode,done startFinish;
+  class human,resolve,hours,another,endReq,whyVerify,abilities scenario;
+  class kindGate,humanGate decision;
+  class rule ruleNote;
+${styleBlock}`
+    };
+    let currentDiagramSource = diagrams.overview;
+
+    const buttonOrder = [
+      ["overview", "Overview"],
+      ["callback", "Callback"],
+      ["outbound", "You called me"],
+      ["fraudAi", "AI / fraud"],
+      ["thirdParty", "Third party"],
+      ["dispute", "Dispute"],
+      ["bankruptcy", "Bankruptcy"],
+      ["ceaseStop", "Stop contact"],
+      ["attorney", "Attorney"],
+      ["deceased", "Deceased"],
+      ["language", "Language"],
+      ["abusiveSilence", "Abuse / silence"],
+      ["updateContact", "Contact info"],
+      ["otherRequests", "Other requests"]
+    ];
+
+    function renderList(element, items) {
+      element.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        element.appendChild(li);
+      });
+    }
+
+    async function renderDiagram(key) {
+      currentDiagramSource = diagrams[key];
+      document.getElementById("diagram").innerHTML = "";
+      const renderId = `auxIntentsDiagram-${key}-${Date.now()}`;
+      const { svg } = await mermaid.render(renderId, currentDiagramSource);
+      document.getElementById("diagram").innerHTML = svg;
+    }
+
+    function setScenario(key) {
+      const item = scenarios[key];
+      kicker.textContent = item.kicker;
+      title.textContent = item.title;
+      summary.textContent = item.summary;
+      pills.innerHTML = "";
+      item.tags.forEach((tag, index) => {
+        const span = document.createElement("span");
+        span.className = `pill ${index === 0 ? "lookup" : index === 1 ? "auth" : "success"}`;
+        span.textContent = tag;
+        pills.appendChild(span);
+      });
+      renderList(talkTrack, item.talkTrack);
+      renderList(logic, item.logic);
+      document.querySelectorAll(".scenario-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.scenario === key);
+      });
+      renderDiagram(key).catch((error) => {
+        document.getElementById("diagram").textContent = `Unable to render diagram: ${error.message}`;
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.setTimeout(() => toast.classList.remove("visible"), 1600);
+    }
+
+    buttonOrder.forEach(([key, label]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "scenario-button";
+      button.dataset.scenario = key;
+      button.innerHTML = `<span class="button-kicker">${label}</span>${scenarios[key].title}`;
+      button.addEventListener("click", () => setScenario(key));
+      scenarioButtons.appendChild(button);
+    });
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryTextColor: "#0f172a",
+        lineColor: "#64748b"
+      }
+    });
+
+    document.getElementById("copyMermaid").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(currentDiagramSource);
+      showToast("Current scenario Mermaid copied");
+    });
+
+    document.getElementById("downloadSvg").addEventListener("click", () => {
+      const svgText = document.querySelector("#diagram svg").outerHTML;
+      const blob = new Blob([svgText], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ncb-aux-intents-workflow.svg";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("SVG downloaded");
+    });
+
+    document.getElementById("resetScenario").addEventListener("click", () => setScenario("overview"));
+
+    setScenario("overview");
+  </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NCB Account Maintenance Workflow</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 32px 40px 24px;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: white;
+    }
+
+    header p {
+      max-width: 920px;
+      margin: 8px 0 0;
+      color: #dbeafe;
+      font-size: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 20px;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .scenario-buttons {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    button.scenario-button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 12px 14px;
+      text-align: left;
+      font: inherit;
+      transition: 160ms ease;
+    }
+
+    button.scenario-button:hover {
+      border-color: var(--blue);
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+
+    button.scenario-button.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 4px 0 0 var(--blue);
+    }
+
+    .button-kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+
+    .details {
+      padding: 20px;
+    }
+
+    .details p {
+      margin: 0 0 14px;
+      color: #334155;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: var(--gray-soft);
+    }
+
+    .pill.lookup {
+      background: var(--purple-soft);
+      color: #4c1d95;
+      border-color: #c4b5fd;
+    }
+
+    .pill.auth {
+      background: var(--amber-soft);
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+
+    .pill.stop {
+      background: var(--red-soft);
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    .pill.success {
+      background: var(--green-soft);
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    ul {
+      margin: 8px 0 18px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 7px 0;
+      color: #334155;
+    }
+
+    .rule-card {
+      margin: 16px 20px 20px;
+      padding: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 14px;
+      color: #78350f;
+      font-size: 14px;
+    }
+
+    .diagram-panel {
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .toolbar strong {
+      font-size: 14px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .toolbar button:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .diagram-wrap {
+      padding: 18px;
+      overflow: auto;
+      min-height: 680px;
+      background: white;
+    }
+
+    #diagram {
+      min-width: 980px;
+    }
+
+    #diagram svg {
+      max-width: none;
+      width: 100%;
+      height: auto;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 160ms ease;
+      pointer-events: none;
+      font-size: 14px;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1050px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+
+    .client-brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .client-brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .client-brand-logo {
+      display: block;
+      max-height: 54px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .client-brand-logo.ncb-logo {
+      max-height: 64px;
+    }
+
+    .client-brand-caption {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .client-brand-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .client-brand-caption {
+        white-space: normal;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="client-brand-bar">
+      <div class="client-brand-logos">
+        <img class="client-brand-logo ncb-logo" src="../assets/ncb-logo.png" alt="NCB Management Services Incorporated logo" />
+        <img class="client-brand-logo" src="../assets/prodigal-logo.png" alt="Prodigal logo" />
+      </div>
+      <span class="client-brand-caption">Client Workflow Walkthrough</span>
+    </div>
+    <h1>NCB Account Maintenance Workflow</h1>
+    <p>Interactive client walkthrough for editing and viewing an existing payment plan. Use the scenario buttons to explain each maintenance sub-flow: moving a payment, changing a method on one payment or the whole plan, doing both, and the read-only plan view.</p>
+  </header>
+
+  <main>
+    <aside class="panel sidebar">
+      <div class="scenario-buttons" id="scenarioButtons"></div>
+      <section class="details">
+        <span class="button-kicker" id="scenarioKicker">Scenario</span>
+        <h2 id="scenarioTitle"></h2>
+        <p id="scenarioSummary"></p>
+        <div class="pill-row" id="scenarioPills"></div>
+        <h3>Talk Track</h3>
+        <ul id="scenarioTalkTrack"></ul>
+        <h3>Agent Logic</h3>
+        <ul id="scenarioLogic"></ul>
+      </section>
+      <div class="rule-card">
+        <strong>Core maintenance rule:</strong> always start with the existing-plan lookup and act only on ACTIVE plans. A single scheduled payment carries exactly one change per update call (date or method, never both), and editing an existing plan is separate from taking a new payment.
+      </div>
+    </aside>
+
+    <section class="panel diagram-panel">
+      <div class="toolbar">
+        <strong>Workflow Diagram</strong>
+        <div class="toolbar-actions">
+          <button type="button" id="copyMermaid">Copy Mermaid</button>
+          <button type="button" id="downloadSvg">Download SVG</button>
+          <button type="button" id="resetScenario">Reset View</button>
+        </div>
+      </div>
+      <div class="diagram-wrap">
+        <div id="diagram"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+
+    const scenarios = {
+      overview: {
+        kicker: "Overview",
+        title: "View or edit an existing plan, ACTIVE only",
+        summary: "After the consumer is verified, the agent fetches the existing plan, identifies which maintenance intent applies, and runs that sub-flow against ACTIVE plans only.",
+        tags: ["Existing plan", "ACTIVE only", "Edit vs view"],
+        talkTrack: [
+          "Account maintenance only applies to a plan that already exists and is still active.",
+          "Every maintenance path begins by pulling the current plan and upcoming payments.",
+          "From there the agent routes into one of five sub-flows: move a date, change a method on one payment, change the method for the whole plan, change both on one payment, or just view the plan."
+        ],
+        logic: [
+          "get_payment_plans first; filter to ACTIVE plans and ignore cancelled or superseded entries.",
+          "Sub-flow A moves a date, B changes one payment's method, C changes the whole plan's method.",
+          "Sub-flow D changes both date and method on one payment in two sequential calls.",
+          "Sub-flow E is read-only. Setting up brand-new payments is a separate negotiation flow."
+        ]
+      },
+      subA: {
+        kicker: "Sub-flow A",
+        title: "Change one scheduled payment date",
+        summary: "Move a single upcoming payment to a new date within the allowed window, using update_scheduled_payment with the date field only.",
+        tags: ["Date only", "Original date + 7 days", "One field per call"],
+        talkTrack: [
+          "The consumer wants to move an upcoming payment to a different day.",
+          "If there is more than one upcoming payment, the agent lists them and asks which to move.",
+          "It states the rule up front: the new date can be the original date or up to seven days later, never earlier.",
+          "Relative dates like next Tuesday are resolved to a concrete date and read back before anything is validated."
+        ],
+        logic: [
+          "get_payment_plans, ACTIVE only, to get the scheduled_payment_ref.",
+          "Validate the date with execute_code before responding: future, not before original, within 7 days of original.",
+          "On a valid date, read it back, get an explicit yes, then call update_scheduled_payment with scheduled_date only.",
+          "If today's payment is already submitted for draft, it cannot move today; offer the next payment or a callback."
+        ]
+      },
+      subB: {
+        kicker: "Sub-flow B",
+        title: "Change method on one scheduled payment",
+        summary: "Swap the card or bank account on a single upcoming payment, validating the instrument and reading NACHA for ACH, then update_scheduled_payment with the method only.",
+        tags: ["Method only", "Validate instrument", "ACH needs NACHA"],
+        talkTrack: [
+          "The consumer wants a different card or bank account for one specific payment.",
+          "The agent calls get_payment_methods first and reads back only the methods that come back, then asks which.",
+          "For a bank account it confirms the account is in the consumer's own name before collecting any details.",
+          "Card or account numbers are read back digit by digit and validated before the update."
+        ],
+        logic: [
+          "get_payment_plans, then get_payment_methods before listing options.",
+          "Card: collect number and expiry, validate_card_details. ACH: same-name check, collect routing and account, validate_bank_details.",
+          "For ACH, read the single-payment NACHA script and wait for I agree.",
+          "Call update_scheduled_payment with payment_method only, never with a date."
+        ]
+      },
+      subC: {
+        kicker: "Sub-flow C",
+        title: "Change method for the whole plan",
+        summary: "Apply a new method to every remaining installment via update_payment_plan, after confirming scope and reading the recurring authorization.",
+        tags: ["All remaining payments", "Recurring NACHA", "Expiry must outlast plan"],
+        talkTrack: [
+          "The consumer wants the new card or bank account used for all remaining payments, not just one.",
+          "The agent confirms that scope explicitly before doing anything.",
+          "For a card on a recurring plan, the expiry must fall after the final installment date.",
+          "For a bank account, the recurring NACHA script covers every installment and needs an explicit I agree."
+        ],
+        logic: [
+          "Confirm the change applies to all remaining payments, then get_payment_methods.",
+          "Validate the instrument; for cards also verify expiry is after the last installment.",
+          "Read the recurring NACHA (ACH) or recurring card authorization, wait for I agree.",
+          "Call update_payment_plan with the new method to apply across all installments."
+        ]
+      },
+      subD: {
+        kicker: "Sub-flow D",
+        title: "Change both date and method on one payment",
+        summary: "Two sequential update_scheduled_payment calls on the same payment: date first, then method, never bundled into one call.",
+        tags: ["Two calls", "Date then method", "Honest partial state"],
+        talkTrack: [
+          "The consumer wants to both move a payment and change its method.",
+          "The API only accepts one field per call, so the agent makes two calls back to back.",
+          "It runs the first change fully, confirms it succeeded, then runs the second.",
+          "If the first succeeds but the second fails, the agent says clearly what is and is not done."
+        ],
+        logic: [
+          "Pick the payment and determine the order from the consumer's request.",
+          "First call: update_scheduled_payment with only the first field; proceed only on success.",
+          "Second call: update_scheduled_payment with only the second field.",
+          "Never claim both changes succeeded if only one did."
+        ]
+      },
+      subE: {
+        kicker: "Sub-flow E",
+        title: "View existing plan and upcoming payments",
+        summary: "Read-only summary of the active plan and its upcoming payments, with no commit. A broken plan is surfaced rather than treated as healthy.",
+        tags: ["Read-only", "No commit", "Surface broken plans"],
+        talkTrack: [
+          "The consumer asks what their plan is, what is coming up, or what card is on file.",
+          "The agent summarizes the plan naturally: total, remaining, frequency, method last four, and each upcoming payment.",
+          "Dates and amounts are spoken as words, and the last four digits are read one at a time.",
+          "After the summary it asks whether they want to change anything, routing into A, B, C, or D if so."
+        ],
+        logic: [
+          "get_payment_plans, ACTIVE only, then summarize chronologically.",
+          "If the latest payment failed or the plan is broken, surface the missed installment with date and amount.",
+          "Offer next steps for a broken plan: catch-up payment, plan reset by callback, or nothing for now.",
+          "No commit happens in this sub-flow; it is informational only."
+        ]
+      }
+    };
+
+    const scenarioButtons = document.getElementById("scenarioButtons");
+    const kicker = document.getElementById("scenarioKicker");
+    const title = document.getElementById("scenarioTitle");
+    const summary = document.getElementById("scenarioSummary");
+    const pills = document.getElementById("scenarioPills");
+    const talkTrack = document.getElementById("scenarioTalkTrack");
+    const logic = document.getElementById("scenarioLogic");
+    const toast = document.getElementById("toast");
+    const styleBlock = `
+  classDef startFinish fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#052e16;
+  classDef lookup fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+  classDef scenario fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+  classDef authStep fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03;
+  classDef decision fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#422006;
+  classDef stopFlow fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+  classDef ruleNote fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,color:#111827;`;
+
+    const diagrams = {
+      overview: `flowchart TD
+  startNode([Verified consumer wants to view or edit a plan])
+  getPlans["API: get_payment_plans, ACTIVE plans only"]
+  identify{"Which maintenance intent?"}
+  subA["Sub-flow A: move one payment date"]
+  subB["Sub-flow B: change method on one payment"]
+  subC["Sub-flow C: change method for whole plan"]
+  subD["Sub-flow D: change date and method on one payment"]
+  subE["Sub-flow E: view plan, read-only"]
+  updateOne["API: update_scheduled_payment"]
+  updatePlan["API: update_payment_plan"]
+  done([Confirm change, then anything else])
+  readOnly([Read back plan summary])
+
+  startNode --> getPlans --> identify
+  identify -->|"Move a payment"| subA --> updateOne
+  identify -->|"New method, one payment"| subB --> updateOne
+  identify -->|"New method, all payments"| subC --> updatePlan
+  identify -->|"Date and method, one payment"| subD --> updateOne
+  identify -->|"What is my plan"| subE --> readOnly
+  updateOne --> done
+  updatePlan --> done
+
+  rule["Rule: only ACTIVE plans are editable. update_scheduled_payment carries one field per call. New payments are a separate flow."]
+
+  class startNode,done,readOnly startFinish;
+  class getPlans,updateOne,updatePlan lookup;
+  class subA,subB,subC,subD,subE scenario;
+  class identify decision;
+  class rule ruleNote;
+${styleBlock}`,
+      subA: `flowchart TD
+  startNode([Sub-flow A: move a payment date])
+  getPlans["API: get_payment_plans, ACTIVE only"]
+  multiGate{"More than one upcoming payment?"}
+  pick["List payments, ask which one to move"]
+  inflightGate{"Today's payment already sent for draft?"}
+  inflightStop["Cannot move today; offer next payment or callback"]
+  stateRule["State the rule: original date or up to 7 days later, never earlier"]
+  askDate["Ask for the new date"]
+  resolve["Resolve relative date, read back, confirm"]
+  validate["execute_code: future, not before original, within 7 days of original"]
+  validGate{"Date valid?"}
+  reason["Give the specific reason, ask for another date"]
+  readback["Read back: move amount from old date to new date"]
+  yesGate{"Consumer confirms?"}
+  updateCall["API: update_scheduled_payment, scheduled_date only"]
+  successGate{"Success?"}
+  done([Confirm: payment rescheduled])
+  failFlow([Tiered failure handling or callback])
+
+  startNode --> getPlans --> multiGate
+  multiGate -->|"Yes"| pick --> inflightGate
+  multiGate -->|"No"| inflightGate
+  inflightGate -->|"Yes"| inflightStop
+  inflightGate -->|"No"| stateRule --> askDate --> resolve --> validate --> validGate
+  validGate -->|"No"| reason --> askDate
+  validGate -->|"Yes"| readback --> yesGate
+  yesGate -->|"No"| askDate
+  yesGate -->|"Yes"| updateCall --> successGate
+  successGate -->|"Yes"| done
+  successGate -->|"No"| failFlow
+
+  rule["Sub-flow A rule: the 7-day window is measured from the ORIGINAL scheduled date, not the current date after a prior reschedule."]
+
+  class startNode,done startFinish;
+  class getPlans,updateCall lookup;
+  class pick,inflightStop,stateRule,askDate,resolve,readback scenario;
+  class validate authStep;
+  class multiGate,inflightGate,validGate,yesGate,successGate decision;
+  class failFlow stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      subB: `flowchart TD
+  startNode([Sub-flow B: change method on one payment])
+  getPlans["API: get_payment_plans, ACTIVE only"]
+  multiGate{"More than one upcoming payment?"}
+  pick["List payments, ask which one"]
+  getMethods["API: get_payment_methods"]
+  listMethods["Read back only the returned methods, ask which"]
+  methodGate{"Card or bank account?"}
+  cardCollect["Collect card number and expiry, read back digit by digit"]
+  validateCard["API: validate_card_details"]
+  cardGate{"Card valid?"}
+  sameName["Ask: is the bank account in your own name?"]
+  nameGate{"Same name on file?"}
+  refuse["Decline third-party account; offer card or callback"]
+  achCollect["Collect routing and account, read back digit by digit"]
+  validateBank["API: validate_bank_details"]
+  bankGate{"Bank valid?"}
+  nacha["Read single-payment NACHA, wait for I agree"]
+  reCollect["Explain the issue, re-collect, max 3 tries"]
+  updateCall["API: update_scheduled_payment, payment_method only"]
+  successGate{"Success?"}
+  done([Confirm: new method set for that payment])
+  failFlow([Tiered failure handling or callback])
+
+  startNode --> getPlans --> multiGate
+  multiGate -->|"Yes"| pick --> getMethods
+  multiGate -->|"No"| getMethods
+  getMethods --> listMethods --> methodGate
+  methodGate -->|"Card"| cardCollect --> validateCard --> cardGate
+  cardGate -->|"No"| reCollect --> methodGate
+  cardGate -->|"Yes"| updateCall
+  methodGate -->|"Bank account"| sameName --> nameGate
+  nameGate -->|"No"| refuse
+  nameGate -->|"Yes"| achCollect --> validateBank --> bankGate
+  bankGate -->|"No"| reCollect
+  bankGate -->|"Yes"| nacha --> updateCall
+  updateCall --> successGate
+  successGate -->|"Yes"| done
+  successGate -->|"No"| failFlow
+
+  rule["Sub-flow B rule: get_payment_methods runs before listing options. ACH requires the same-name check and verbal NACHA before the update."]
+
+  class startNode,done startFinish;
+  class getPlans,getMethods,validateCard,validateBank,updateCall lookup;
+  class pick,listMethods,cardCollect,sameName,achCollect,nacha,reCollect,refuse scenario;
+  class methodGate,cardGate,nameGate,bankGate,multiGate,successGate decision;
+  class failFlow stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      subC: `flowchart TD
+  startNode([Sub-flow C: change method for the whole plan])
+  getPlans["API: get_payment_plans, ACTIVE only"]
+  scopeConfirm["Confirm: this changes the method for ALL remaining payments"]
+  scopeGate{"Consumer confirms scope?"}
+  exit["Exit gracefully or route to a single payment"]
+  getMethods["API: get_payment_methods"]
+  listMethods["Read back only the returned methods, ask which"]
+  methodGate{"Card or bank account?"}
+  cardCollect["Collect card number and expiry, read back"]
+  validateCard["API: validate_card_details"]
+  expiryGate{"Card valid and expiry after final installment?"}
+  cardAuth["Read recurring card authorization, wait for I agree"]
+  sameName["Ask: is the bank account in your own name?"]
+  nameGate{"Same name on file?"}
+  refuse["Decline third-party account; offer card or callback"]
+  achCollect["Collect routing and account, read back"]
+  validateBank["API: validate_bank_details"]
+  bankGate{"Bank valid?"}
+  recurNacha["Read recurring NACHA, wait for I agree"]
+  reCollect["Explain the issue, re-collect, max 3 tries"]
+  updateCall["API: update_payment_plan, new method on all installments"]
+  successGate{"Success?"}
+  done([Confirm: new method set for all remaining payments])
+  failFlow([Tiered failure handling or callback])
+
+  startNode --> getPlans --> scopeConfirm --> scopeGate
+  scopeGate -->|"No"| exit
+  scopeGate -->|"Yes"| getMethods --> listMethods --> methodGate
+  methodGate -->|"Card"| cardCollect --> validateCard --> expiryGate
+  expiryGate -->|"No"| reCollect --> methodGate
+  expiryGate -->|"Yes"| cardAuth --> updateCall
+  methodGate -->|"Bank account"| sameName --> nameGate
+  nameGate -->|"No"| refuse
+  nameGate -->|"Yes"| achCollect --> validateBank --> bankGate
+  bankGate -->|"No"| reCollect
+  bankGate -->|"Yes"| recurNacha --> updateCall
+  updateCall --> successGate
+  successGate -->|"Yes"| done
+  successGate -->|"No"| failFlow
+
+  rule["Sub-flow C rule: confirm whole-plan scope first. A card on a recurring plan must not expire before the last installment."]
+
+  class startNode,done startFinish;
+  class getPlans,getMethods,validateCard,validateBank,updateCall lookup;
+  class scopeConfirm,listMethods,cardCollect,cardAuth,sameName,achCollect,recurNacha,reCollect,refuse,exit scenario;
+  class scopeGate,methodGate,expiryGate,nameGate,bankGate,successGate decision;
+  class failFlow stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      subD: `flowchart TD
+  startNode([Sub-flow D: date AND method on one payment])
+  getPlans["API: get_payment_plans, ACTIVE only"]
+  pick["Pick the payment, determine order from the request"]
+  firstChange["First change: collect, validate, read back, get yes"]
+  firstCall["API: update_scheduled_payment, first field only"]
+  firstGate{"First change succeeded?"}
+  stopFirst["Stop; explain nothing changed; offer retry or callback"]
+  confirmFirst["Briefly confirm the first change"]
+  secondChange["Second change: collect, validate, read back, get yes"]
+  secondCall["API: update_scheduled_payment, second field only"]
+  secondGate{"Second change succeeded?"}
+  partial["First change IS in place; state clearly what is and is not done"]
+  done([Confirm combined: date moved and method updated])
+
+  startNode --> getPlans --> pick --> firstChange --> firstCall --> firstGate
+  firstGate -->|"No"| stopFirst
+  firstGate -->|"Yes"| confirmFirst --> secondChange --> secondCall --> secondGate
+  secondGate -->|"Yes"| done
+  secondGate -->|"No"| partial
+
+  rule["Sub-flow D rule: never bundle the two fields. Make the second call only after the first returns success. If only one succeeds, say so honestly."]
+
+  class startNode,done startFinish;
+  class getPlans,firstCall,secondCall lookup;
+  class pick,firstChange,confirmFirst,secondChange scenario;
+  class firstGate,secondGate decision;
+  class stopFirst,partial stopFlow;
+  class rule ruleNote;
+${styleBlock}`,
+      subE: `flowchart TD
+  startNode([Sub-flow E: view plan, read-only])
+  getPlans["API: get_payment_plans, ACTIVE only"]
+  brokenGate{"Latest payment failed or plan broken?"}
+  surface["Surface the missed installment with date and amount"]
+  options["Offer catch-up payment, plan reset by callback, or nothing"]
+  summarize["Summarize total, remaining, frequency, method last four, upcoming dates and amounts"]
+  speech["Speak dates and amounts as words; read last four digit by digit"]
+  askChange["Ask: anything to change, or was that all?"]
+  routeGate{"Consumer wants a change?"}
+  route["Route to Sub-flow A, B, C, or D"]
+  done([End read-only summary])
+
+  startNode --> getPlans --> brokenGate
+  brokenGate -->|"Yes"| surface --> options
+  brokenGate -->|"No"| summarize --> speech --> askChange --> routeGate
+  routeGate -->|"Yes"| route
+  routeGate -->|"No"| done
+
+  rule["Sub-flow E rule: read-only. No commit happens here. A broken plan is surfaced, never silently treated as healthy."]
+
+  class startNode,done startFinish;
+  class getPlans lookup;
+  class surface,options,summarize,speech,askChange,route scenario;
+  class brokenGate,routeGate decision;
+  class rule ruleNote;
+${styleBlock}`
+    };
+    let currentDiagramSource = diagrams.overview;
+
+    const buttonOrder = [
+      ["overview", "Overview"],
+      ["subA", "Sub-flow A"],
+      ["subB", "Sub-flow B"],
+      ["subC", "Sub-flow C"],
+      ["subD", "Sub-flow D"],
+      ["subE", "Sub-flow E"]
+    ];
+
+    function renderList(element, items) {
+      element.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        element.appendChild(li);
+      });
+    }
+
+    async function renderDiagram(key) {
+      currentDiagramSource = diagrams[key];
+      document.getElementById("diagram").innerHTML = "";
+      const renderId = `accountMaintenanceDiagram-${key}-${Date.now()}`;
+      const { svg } = await mermaid.render(renderId, currentDiagramSource);
+      document.getElementById("diagram").innerHTML = svg;
+    }
+
+    function setScenario(key) {
+      const item = scenarios[key];
+      kicker.textContent = item.kicker;
+      title.textContent = item.title;
+      summary.textContent = item.summary;
+      pills.innerHTML = "";
+      item.tags.forEach((tag, index) => {
+        const span = document.createElement("span");
+        span.className = `pill ${index === 0 ? "lookup" : index === 1 ? "auth" : "success"}`;
+        span.textContent = tag;
+        pills.appendChild(span);
+      });
+      renderList(talkTrack, item.talkTrack);
+      renderList(logic, item.logic);
+      document.querySelectorAll(".scenario-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.scenario === key);
+      });
+      renderDiagram(key).catch((error) => {
+        document.getElementById("diagram").textContent = `Unable to render diagram: ${error.message}`;
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.setTimeout(() => toast.classList.remove("visible"), 1600);
+    }
+
+    buttonOrder.forEach(([key, label]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "scenario-button";
+      button.dataset.scenario = key;
+      button.innerHTML = `<span class="button-kicker">${label}</span>${scenarios[key].title}`;
+      button.addEventListener("click", () => setScenario(key));
+      scenarioButtons.appendChild(button);
+    });
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryTextColor: "#0f172a",
+        lineColor: "#64748b"
+      }
+    });
+
+    document.getElementById("copyMermaid").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(currentDiagramSource);
+      showToast("Current scenario Mermaid copied");
+    });
+
+    document.getElementById("downloadSvg").addEventListener("click", () => {
+      const svgText = document.querySelector("#diagram svg").outerHTML;
+      const blob = new Blob([svgText], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ncb-account-maintenance-workflow.svg";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("SVG downloaded");
+    });
+
+    document.getElementById("resetScenario").addEventListener("click", () => setScenario("overview"));
+
+    setScenario("overview");
+  </script>
+</body>
+</html>
